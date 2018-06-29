@@ -1,5 +1,8 @@
 import "layers"
 import "util"
+import "optimizer"
+import "classifications"
+import "loss"
 
 module type network = {
 
@@ -19,6 +22,11 @@ module type network = {
   val get_index: NN -> [](i32, i32)
   val get_outputs: NN -> [](i32,i32)
 
+
+  -- val loss_batch: NN -> [][]t -> [][]t -> t
+  val predict: NN -> []t -> i32 -> []t
+  val accuracy:NN ->  [][]t -> [][]t -> t
+
 }
 
 module neural_network (R:real): network with t = R.t with NN = NN R.t = {
@@ -27,6 +35,11 @@ module neural_network (R:real): network with t = R.t with NN = NN R.t = {
   type NN = NN t
 
   module random = normal_random_array R
+  module optimizer = gradient_descent R
+  module class_funcs = class_funcs_coll R
+  module loss_funcs = loss_funcs R
+
+
 
    --- Returns an empty network
   let empty_network () : NN =
@@ -67,5 +80,30 @@ module neural_network (R:real): network with t = R.t with NN = NN R.t = {
   let get_types (nn:NN) = nn.info.tp
   let get_index (nn:NN) = nn.info.index
   let get_outputs (nn:NN) = nn.nn_outputs
+
+  let predict [n] (nn:NN) (input:[n]t) (classes:i32) : []t =
+    let output = optimizer.feed_forward nn input
+    let output_len = length output
+    in class_funcs.calc_classification output[output_len-classes:] 0
+
+  let is_equal [n] (logits:[n]t) (labels:[n]t) =
+    let logits_i:i32 = (reduce (\n i -> if unsafe (R.(logits[n] > logits[i])) then n else i) 0 (iota n))
+    let labels_i:i32 = (reduce (\n i -> if unsafe (R.(labels[n] > labels[i])) then n else i) 0 (iota n))
+    in if logits_i == labels_i  then 1 else 0
+
+  let accuracy [m][n][d] (nn:NN) (logits:[d][n]t) (labels:[d][m]t) =
+    -- let hits:[d]i32 = (map2 (\x y -> let tmp = predict nn x m
+    -- in is_equal tmp y) logits labels)
+
+    -- let hits = map (\i -> let tmp = predict nn logits[i] m
+                          -- in is_equal tmp labels[i]) (0..<d)
+    let total = 0
+    let total = loop (total) for i < (length logits) do
+              let prediction = predict nn logits[i] m
+              in total + (is_equal prediction labels[i])
+
+    -- let total = reduce (+) 0  hits
+    in R.(i32 total / i32 d)
+    -- in total
 
 }
