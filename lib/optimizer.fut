@@ -9,8 +9,7 @@ module type optimizer = {
   type t
   type NN
 
-  val feed_forward: NN -> []t -> []t
-  val feed_forward_batch: NN -> [][]t -> [][]t
+  val feed_forward: NN -> [][]t -> [][]t
   val train_batch:  NN -> [][]t -> [][]t -> t -> NN
   val backprop_batch: NN -> [][]t -> [][]t -> t -> ([]t, []t)
 }
@@ -27,29 +26,26 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
   module class_funcs = loss_funcs R
 
   --- Returns output from each layer
-  let feed_forward (nn:NN) (input: []t) =
+  let feed_forward [p][q] (nn:NN) (input: [p][q]t) =
     -- Indicies for iteration
-    let retval_end = length input
+    let retval_end = q
     let retval_start = 0
     let b_i = 0
     let nn_output = nn.nn_outputs[length nn.nn_outputs - 1].2 + retval_end
-    let retval: *[]t =
-      unsafe (map (\i -> if i < retval_end then input[i] else R.(i32 0)) (0..< nn_output))
+    let retval: [][]t =
+       unsafe map (\x -> map(\i -> if i < retval_end then x[i] else R.(i32 0)) (0..<nn_output)) input
+      -- unsafe replicate p (map2 (\i y -> if i < retval_end then y[i] else R.(i32 0)) (0..<nn_output) input)
     let (retval, _, _, _) = loop (retval, retval_start, retval_end, b_i)
       for i < length nn.info.tp do
         let (m,n)            = nn.info.dims[i]
         let (w_start, w_end) = nn.info.index[i]
-        let (r_start, r_end) = nn.nn_outputs[i]
-        let weights          = unsafe unflatten n m nn.data.w[w_start:w_end]
-        let res              = unsafe flatten (lalg.matmul weights (unflatten m 1 retval[retval_start:retval_end]))
-        let res_bias         = unsafe util.addbias res nn.data.b[b_i: b_i + n]
-        let retval_i_diff    = (r_end - r_start)
-        let retval           = unsafe scatter retval (retval_end..<(retval_end + retval_i_diff)) (res_bias)
-      in (retval, retval_start + m, retval_end + n, b_i + n)
+        let weights          = unflatten n m nn.data.w[w_start:w_end]
+        let res              = map (\x -> flatten (lalg.matmul weights (unflatten m 1 x[retval_start:retval_end]))) retval
+        let res_bias         = map (\x -> util.addbias x nn.data.b[b_i: b_i + n]) res
+        let retval           =
+          map2 (\x i -> scatter (copy retval[i]) (retval_end..<(retval_end + n)) (x)) (res_bias) (0..<p)
+        in (retval, retval_start + m, retval_end + n, b_i + n)
     in retval
-
-   let feed_forward_batch (nn:NN) (input:[][]t) =
-     map (\x -> feed_forward nn x) input
 
    let backprop_batch [m] (nn:NN) (input:[m][]t) (labels:[m][]t) (alpha: t) =
      let l_iter = length nn.info.tp - 1
@@ -74,8 +70,8 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
 
      let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
      let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
-     let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + y))) xr yr) grads_tmp_w final_l_grads
-     let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + y))) xr yr) grads_tmp_b final_l_delta_flat
+     let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y / i32 m)))) xr yr) grads_tmp_w final_l_grads
+     let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y / i32 m)))) xr yr) grads_tmp_b final_l_delta_flat
 
      let tmp_w           = map (\_ -> R.(i32 0)) (0..<w_i)
      let tmp_b           = map (\_ -> R.(i32 0)) (0..<b_i)
@@ -113,8 +109,8 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
           let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
           let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
 
-          let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + y))) xr yr) grads_tmp_w cur_l_grad
-          let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + y))) xr yr) grads_tmp_b cur_l_delta_flat
+          let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m)))) xr yr) grads_tmp_w cur_l_grad
+          let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m)))) xr yr) grads_tmp_b cur_l_delta_flat
 
           let grads_w         = scatter (grads_w) (w_i-grads_w_i..<w_i) grads_w_reduced
           let grads_b         = scatter (grads_b) (b_i-grads_b_i..<b_i) grads_b_reduced
@@ -148,19 +144,21 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
       let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
       let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
 
-      let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + y))) xr yr) grads_tmp_w first_l_grad
-      let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + y))) xr yr) grads_tmp_b first_l_delta_flat
+      let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m )))) xr yr) grads_tmp_w first_l_grad
+      let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m )))) xr yr) grads_tmp_b first_l_delta_flat
 
       let grads_w         = scatter (grads_w) (w_i-grads_w_i..<w_i) grads_w_reduced
       let grads_b         = scatter (grads_b) (b_i-grads_b_i..<b_i) grads_b_reduced
 
-      let grads_w'         = map (\x -> R.(alpha * x)) grads_w
-      let grads_b'         = map (\x -> R.(alpha * x)) grads_b
+      let grads_w'         = map (\x -> R.(alpha * (x))) grads_w
+      let grads_b'         = map (\x -> R.(alpha * (x))) grads_b
       in (grads_w', grads_b')
 
-   let train_batch (nn:NN) (data:[][]t) (labels:[][]t) (alpha: t)=
-     let output = feed_forward_batch nn data
-     let (grads_w', grads_b') = backprop_batch nn output labels alpha
+   let train_batch (nn:NN) (input:[][]t) (labels:[][]t) (alpha: t) =
+     let output = feed_forward nn input
+
+     let (grads_w', grads_b')  = backprop_batch nn output labels alpha
+
      ------- Update network ------------
      let new_w               = util.subV nn.data.w grads_w'
      let new_b               = util.subV nn.data.b grads_b'

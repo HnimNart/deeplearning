@@ -83,7 +83,7 @@ module normal_random_array (R:real) : random_generator
   let gen_rand (seed: i32) : t =
     let rng = dist.engine.rng_from_seed [seed]
     let (_, x) = dist.rand stdnorm rng in
-    R.(x / i32 100)
+    R.(x / i32 10)
 
   let gen_random_array (d: i32) (seed:i32) : []t =
     map gen_rand (map (\x -> x + d + seed) (iota d))

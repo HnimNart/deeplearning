@@ -14,13 +14,16 @@ let nn3   = tf.nn.connect_layer nn2 output
 let model = tf.nn.init_network_w_rand_norm nn3 2
 
 let main [m][n][d] (input: [m][d]tf.t) (labels: [m][n]tf.t) =
-  let data_sets = 10000
-  let batch_size = 2
+  let data_sets = 10
+  let batch_size = 10
   let i = 0
-  let (nn, _) = loop (model, i) while i < data_sets do
-    let train_model :tf.nn.NN =  tf.optimizer.train_batch model input[i:i+batch_size] labels[i:i+batch_size] 0.01
-                       in (train_model, i + batch_size)
-  in (tf.nn.accuracy nn input[:10000] labels[:10000])
+  let (nn,_ ) = loop (model, i) while i < data_sets do
+                    let model: tf.nn.NN =  tf.optimizer.train_batch model input[i:i+batch_size] labels[i:i+batch_size] 0.1
+                    in (model, i + batch_size)
+                    in(tf.nn.accuracy nn input[:data_sets] labels[:data_sets])
+                        -- tf.nn.accuracy nn input[:data_sets] labels[:data_sets],
+                        -- tf.nn.accuracy model input[:data_sets] labels[:data_sets])
+
 
 
 -- in concat next_layer_calc nn input_from_cur_layer i+1
