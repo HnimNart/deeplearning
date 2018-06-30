@@ -32,9 +32,9 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
     let retval_start = 0
     let b_i = 0
     let nn_output = nn.nn_outputs[length nn.nn_outputs - 1].2 + retval_end
-    let retval: [][]t =
-       unsafe map (\x -> map(\i -> if i < retval_end then x[i] else R.(i32 0)) (0..<nn_output)) input
-      -- unsafe replicate p (map2 (\i y -> if i < retval_end then y[i] else R.(i32 0)) (0..<nn_output) input)
+    let retval: [][]t = map (\x -> scatter (map (\_ -> R.(i32 0)) (0..<nn_output)) (0..<q) x) input
+    -- let retval: [][]t =
+       -- unsafe map (\x -> map(\i -> if i < retval_end then x[i] else R.(i32 0)) (0..<nn_output)) input
     let (retval, _, _, _) = loop (retval, retval_start, retval_end, b_i)
       for i < length nn.info.tp do
         let (m,n)            = nn.info.dims[i]
@@ -68,10 +68,13 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
      let grads_b_i       = n
      let final_l_delta_flat = map (\x -> flatten x) final_l_delta
 
-     let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
-     let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
-     let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y / i32 m)))) xr yr) grads_tmp_w final_l_grads
-     let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y / i32 m)))) xr yr) grads_tmp_b final_l_delta_flat
+     -- let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
+     -- let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
+     -- Omskriv reduce (R.+) (R.i32 0) ---> R.sum
+     let grads_w_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) final_l_grads))
+     let grads_b_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) final_l_delta_flat))
+     -- let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y / i32 m)))) xr yr) grads_tmp_w final_l_grads
+     -- reduce (\xr yr -> map2 (\x y -> R.((x + (y / i32 m)))) xr yr) grads_tmp_b final_l_delta_flat
 
      let tmp_w           = map (\_ -> R.(i32 0)) (0..<w_i)
      let tmp_b           = map (\_ -> R.(i32 0)) (0..<b_i)
@@ -106,11 +109,14 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
           let grads_b_i  = cur_l_row
 
           let cur_l_delta_flat  = map (\x -> flatten x ) cur_l_delta
-          let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
-          let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
+          -- let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
+          -- let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
 
-          let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m)))) xr yr) grads_tmp_w cur_l_grad
-          let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m)))) xr yr) grads_tmp_b cur_l_delta_flat
+          -- let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m)))) xr yr) grads_tmp_w cur_l_grad
+          -- let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m)))) xr yr) grads_tmp_b cur_l_delta_flat
+
+          let grads_w_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) cur_l_grad))
+          let grads_b_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) cur_l_delta_flat))
 
           let grads_w         = scatter (grads_w) (w_i-grads_w_i..<w_i) grads_w_reduced
           let grads_b         = scatter (grads_b) (b_i-grads_b_i..<b_i) grads_b_reduced
@@ -141,17 +147,19 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
 
       let first_l_delta_flat  = map (\x -> flatten x) first_l_delta
 
-      let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
-      let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
+      -- let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
+      -- let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
+      -- let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m )))) xr yr) grads_tmp_w first_l_grad
+      -- let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m )))) xr yr) grads_tmp_b first_l_delta_flat
 
-      let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m )))) xr yr) grads_tmp_w first_l_grad
-      let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m )))) xr yr) grads_tmp_b first_l_delta_flat
+      let grads_w_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) first_l_grad))
+      let grads_b_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) first_l_delta_flat))
 
       let grads_w         = scatter (grads_w) (w_i-grads_w_i..<w_i) grads_w_reduced
       let grads_b         = scatter (grads_b) (b_i-grads_b_i..<b_i) grads_b_reduced
 
-      let grads_w'         = map (\x -> R.(alpha * (x))) grads_w
-      let grads_b'         = map (\x -> R.(alpha * (x))) grads_b
+      let grads_w'         = map (\x -> R.(alpha * x)) grads_w
+      let grads_b'         = map (\x -> R.(alpha * x)) grads_b
       in (grads_w', grads_b')
 
    let train_batch (nn:NN) (input:[][]t) (labels:[][]t) (alpha: t) =

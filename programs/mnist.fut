@@ -14,8 +14,8 @@ let nn3   = tf.nn.connect_layer nn2 output
 let model = tf.nn.init_network_w_rand_norm nn3 2
 
 let main [m][n][d] (input: [m][d]tf.t) (labels: [m][n]tf.t) =
-  let data_sets = 10
-  let batch_size = 10
+  let data_sets = 10000
+  let batch_size = 100
   let i = 0
   let (nn,_ ) = loop (model, i) while i < data_sets do
                     let model: tf.nn.NN =  tf.optimizer.train_batch model input[i:i+batch_size] labels[i:i+batch_size] 0.1
