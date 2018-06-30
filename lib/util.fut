@@ -94,7 +94,6 @@ module normal_random_array (R:real) : random_generator
     -- let s = scan ( \(r,_) (_,_) -> dist.rand stdnorm r) (rng, R.(i32 0)) (zip tmp tmp2)
     -- let (_, res) = unzip s
     -- in map (\x -> R.(x / i32 100)) res
-
 }
 
 ---- Usefull funcs ------

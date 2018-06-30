@@ -84,7 +84,7 @@ module neural_network (R:real): network with t = R.t with NN = NN R.t = {
   let predict [n] (nn:NN) (input:[n]t) (classes:i32) : []t =
     let output = optimizer.feed_forward nn input
     let output_len = length output
-    in class_funcs.calc_classification output[output_len-classes:] 0
+    in class_funcs.calc_classification output[output_len-classes:] 1
 
   let is_equal [n] (logits:[n]t) (labels:[n]t) =
     let logits_i:i32 = (reduce (\n i -> if unsafe (R.(logits[n] > logits[i])) then n else i) 0 (iota n))
