@@ -97,7 +97,6 @@ module neural_network (R:real): network with t = R.t with NN = NN R.t = {
     let total = reduce (+) 0 hits
     in R.(i32 total / i32 d)
 
-
   let loss_batch (nn: NN) (input: [][]t) (labels:[][]t) : t =
     let output = predict nn input 10
     let losses = map2 (\x y -> loss_funcs.calc_loss x y 1) labels output

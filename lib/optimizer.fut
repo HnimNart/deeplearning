@@ -68,13 +68,8 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
      let grads_b_i       = n
      let final_l_delta_flat = map (\x -> flatten x) final_l_delta
 
-     -- let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
-     -- let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
-     -- Omskriv reduce (R.+) (R.i32 0) ---> R.sum
-     let grads_w_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) final_l_grads))
-     let grads_b_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) final_l_delta_flat))
-     -- let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y / i32 m)))) xr yr) grads_tmp_w final_l_grads
-     -- reduce (\xr yr -> map2 (\x y -> R.((x + (y / i32 m)))) xr yr) grads_tmp_b final_l_delta_flat
+     let grads_w_reduced = map (R.sum) (transpose (map (map R.((/i32 m))) final_l_grads))
+     let grads_b_reduced = map (R.sum) (transpose (map (map R.((/i32 m))) final_l_delta_flat))
 
      let tmp_w           = map (\_ -> R.(i32 0)) (0..<w_i)
      let tmp_b           = map (\_ -> R.(i32 0)) (0..<b_i)
@@ -106,17 +101,11 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
           let cur_l_grad             = map2 (\x y -> flatten (lalg.matmul x y)) cur_l_delta prev_l_out
 
           let grads_w_i  = cur_l_row * cur_l_col
-          let grads_b_i  = cur_l_row
+          let grads_b_i  = cur_l_col
 
           let cur_l_delta_flat  = map (\x -> flatten x ) cur_l_delta
-          -- let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
-          -- let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
-
-          -- let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m)))) xr yr) grads_tmp_w cur_l_grad
-          -- let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m)))) xr yr) grads_tmp_b cur_l_delta_flat
-
-          let grads_w_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) cur_l_grad))
-          let grads_b_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) cur_l_delta_flat))
+          let grads_w_reduced = map ( (R.sum)) (transpose (map (map R.((/i32 m))) cur_l_grad))
+          let grads_b_reduced = map ( (R.sum)) (transpose (map (map R.((/i32 m))) cur_l_delta_flat))
 
           let grads_w         = scatter (grads_w) (w_i-grads_w_i..<w_i) grads_w_reduced
           let grads_b         = scatter (grads_b) (b_i-grads_b_i..<b_i) grads_b_reduced
@@ -147,13 +136,8 @@ module gradient_descent (R:real): optimizer with t = R.t with NN = NN R.t = {
 
       let first_l_delta_flat  = map (\x -> flatten x) first_l_delta
 
-      -- let grads_tmp_w     = map (\_ -> R.(i32 0)) (0..<grads_w_i)
-      -- let grads_tmp_b     = map (\_ -> R.(i32 0)) (0..<grads_b_i)
-      -- let grads_w_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m )))) xr yr) grads_tmp_w first_l_grad
-      -- let grads_b_reduced = reduce (\xr yr -> map2 (\x y -> R.((x + (y/ i32 m )))) xr yr) grads_tmp_b first_l_delta_flat
-
-      let grads_w_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) first_l_grad))
-      let grads_b_reduced = map (reduce (R.+) (R.i32 0)) (transpose (map (map R.((/i32 m))) first_l_delta_flat))
+      let grads_w_reduced = map ( (R.sum)) (transpose (map (map R.((/i32 m))) first_l_grad))
+      let grads_b_reduced = map ( (R.sum)) (transpose (map (map R.((/i32 m))) first_l_delta_flat))
 
       let grads_w         = scatter (grads_w) (w_i-grads_w_i..<w_i) grads_w_reduced
       let grads_b         = scatter (grads_b) (b_i-grads_b_i..<b_i) grads_b_reduced
