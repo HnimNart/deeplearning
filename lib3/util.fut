@@ -70,9 +70,10 @@ let diag2d [n] (x: [n]f64) =
 module type random_generator = {
 
  type t
- val gen_random_array: i32 -> i32 -> []t
+ val gen_random_array: i32 -> []t
 }
 
+let seed = 1
 module normal_random_array (R:real) : random_generator
                                       with t = R.t = {
 
@@ -80,12 +81,12 @@ module normal_random_array (R:real) : random_generator
 
   module dist = normal_distribution R minstd_rand
   let stdnorm = {mean = R.(i32 0), stddev = R.(i32 1)}
-  let gen_rand (seed: i32) : t =
-    let rng = dist.engine.rng_from_seed [seed]
+  let gen_rand (i: i32) : t =
+    let rng = dist.engine.rng_from_seed [i]
     let (_, x) = dist.rand stdnorm rng in
     R.(x / i32 100)
 
-  let gen_random_array (d: i32) (seed:i32) : []t =
+  let gen_random_array (d: i32)  : []t =
     map gen_rand (map (\x -> x + d + seed) (iota d))
 
     -- let rng = dist.engine.rng_from_seed [seed]

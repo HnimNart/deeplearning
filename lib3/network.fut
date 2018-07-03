@@ -3,16 +3,16 @@ import "activations"
 import "/futlib/linalg"
 import "classifications"
 
-type forwards 'input 'w 'output  'garbage     = w -> input -> (garbage, output) --- NN
-type train 'input 'w 'delta  'new_w 'output   = w -> input -> input ->  delta -> (delta, new_w)
+type forwards 'input 'w 'output 'garbage  = w -> input -> (garbage, output) --- NN
+type backwards 'g 'w  'err1  'err2 = w -> g ->  err1 -> (err2, w)
 
 -- type NN 'input 'w 'labels 'output 'delta 'new_w      = (forwards input w output, train input w  delta new_w output, w)
-type NN 'input 'w 'output 'garbage = (forwards input w output garbage, w)
+type NN 'input 'w 'output 'g 'e1 'e2  = (forwards input w output g,
+                                                backwards g w e1 e2,
+                                                w)
 
    ---- input weights labels output delta new_weights
-type dense 't = NN ([][]t) ([][]t, [][]t) ([][]t) ([][]t)
-type loss  't = NN ([][]t)  () ([][]t) ([][]t)
-
+type dense 't = NN ([][]t) ([][]t, [][]t) ([][]t) ([][]t) ([][]t)  ([][]t)
 
 module random = normal_random_array f32
 module activation = activation_funcs_coll f32
@@ -26,42 +26,80 @@ let dense_forward [m][n][k] (act_id:i32) ((w,b):([m][n]f32, [m][1]f32)) (input:[
   let act = activation.calc_activation (flatten product') act_id
   in unflatten m k act
 
-let dense_train [m][n] (act_id:i32) ((w,b):([m][n]f32, [m][1]f32)) (input1:[][]f32) (input2:[][]f32) (delta:[][]f32)   =
-  let error = lalg.matmul (transpose w) delta
-  let (input_m, input_n) = (length input2, length input2[0])
-  let deriv    = unflatten input_m input_n (activation.calc_derivative (flatten input2) act_id)
-  let delta    = util.multMatrix error deriv
-  let grads    = lalg.matmul (delta) (transpose input1)
-  let grads_w' = util.scaleMatrix grads 0.01
-  let w'       = util.subMatrix w grads_w'
-  let b'       = util.subMatrix b delta
-  in (delta, (w',b'))
+let dense_backwards  (act_id:i32) (l_layer:bool) ((w,b):([][]f32, [][]f32)) (input:[][]f32) (error:[][]f32) =
+  if l_layer then
+let grad = lalg.matmul error (transpose input)
 
-let dense ((m,n):(i32,i32)) (act_id: i32) : dense f32 =
-  let w = unflatten n m (random.gen_random_array (m*n) 1)
-  let b = unflatten n 1 (random.gen_random_array (n) 1)
-  in (\w input -> (input, dense_forward act_id w input), (w,b))
+    let error_scaled = util.scaleMatrix error 0.01
+    let grad_scaled = util.scaleMatrix grad 0.01
+    let w'          = util.subMatrix w grad_scaled
+    let b'          = util.subMatrix b error_scaled
+    let error'      = lalg.matmul (transpose w) error
+    in (error', (w', b'))
+  else
+    let res = lalg.matmul (w) input
+    let (res_m, res_n) = (length res, length res[0])
+    let deriv = unflatten res_m res_n (activation.calc_derivative (flatten res) act_id)
+    let delta = util.multMatrix error deriv
+    let grad  = lalg.matmul delta (transpose input)
+    let delta_scaled = util.scaleMatrix delta 0.01
+    let grad_scaled = util.scaleMatrix grad 0.01
+    let w'       = util.subMatrix w grad_scaled
+    let b'       = util.subMatrix b delta_scaled
+    let error'   = lalg.matmul (transpose w) delta
+    in (error', (w', b'))
 
-let combine 'w1 'w2 'i1 'o1 'o2 'g1 'g2 ((f1,ws1): NN i1 w1 o1 g1) ((f2,ws2):NN o1 w2 o2 g2) : NN i1 (w1,w2) (o2) (g1,g2) =
+
+let dense ((m,n):(i32,i32)) (act_id: i32) (l_layer:bool) : dense f32 =
+  let w = unflatten n m (random.gen_random_array (m*n) )
+  let b = unflatten n 1 (random.gen_random_array (n) )
+  in (\w input -> (input, dense_forward act_id w input),
+     (\w input error -> dense_backwards act_id l_layer w input error),
+     (w,b))
+
+
+let combine 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22  ((f1, b1,ws1): NN i1 w1 o1 g1 e22 e1) ((f2, b2,ws2):NN o1 w2 o2 g2 e2 e22)
+                                                                                  : NN i1 (w1,w2) (o2) (g1,g2) (e2) (e1) =
   ((\(w1, w2) (input) ->  let (g1, res)  = f1 w1 input
                           let (g2, res2) = f2 w2 res
                           in ((g1, g2), res2)),
+   (\(w1,w2) (g1,g2) (error) ->
+                          let (err2, w2') = b2  w2 g2 error
+                          let (err1, w1') = b1 w1 g1 err2
+                          in (err1, (w1', w2'))),
    (ws1, ws2))
 
-let train 'w 'i 'o 'g ((f,w):NN i w o g) (input:i) (labels:o) (loss_id:i32) (alpha:f32) =
-let (os, output): (g, o) = f w input in output
+let train 'w  'g 'e2  ((f,b,w):NN ([][]f32) w ([][]f32) g ([][]f32) e2) (input:[][]f32) (labels:[][]f32) (alpha:f32) =
+  let (os, output) = f w (transpose input)
+  let error = cross.derivative (transpose labels) output
+  let (_, w') = b w os error
+  in (f,b,w')
 
 
-let n = 100
-let input  = unflatten n 784 (random.gen_random_array (784*n) 1)
-let labels = unflatten n 10 (random.gen_random_array (10*n) 1)
+-- let accuracy 'w  'g 'e2 'wo ((f,_,w):NN ([][]f32) w ([][]f32) g ([][]f32) e2 wo) (input:[][]f32) (labels:[][]f32)  =
+--   let (_, output) = f w (transpose input)
+
+
+
+let n = 1
+let n_input = 16
+let n_class = 2
+let input  = unflatten n n_input (random.gen_random_array (n_input*n))
+let labels = unflatten n n_class (random.gen_random_array (n_class*n))
 -- let w = unflatten 256 784 (random.gen_random_array (784*256) 1)
 -- let b = unflatten 256 1 (random.gen_random_array 256 1)
 
-let main = let l1 = dense (784, 256) 0
-           let l2 = dense (256, 128) 0
-           let l3 = dense (128, 10) 0
-           -- let loss: loss = loss
-           let nn  = combine l1 l2
-           let nn1 = combine nn l3 in
-           map2 (\x y -> train nn1 (transpose [x]) (transpose [y]) (1i32) (0.01f32)) input labels
+-- let tmp = 100
+let main = let l1 = dense (16, 8) 0 false
+           let l2 = dense (8, 4) 0 false
+           let l3 = dense (4, 2) 0 true
+           let nn'  = combine l1 l2
+           let model1  = combine nn' l3
+           let (_,w1) = model1.3
+           let model2  = train model1 input labels 0.01
+           let model3  = train model2 input labels 0.01
+           let (_, w3) = model3.3
+           in (w1.2,w3.2)
+           -- let (os, o) = f w (transpose input)
+           -- let error = map2 (\xr yr -> map2 (\x y -> x - y) xr yr) (transpose labels) o
+           -- let (_, w')   = b w (os) error in w'
