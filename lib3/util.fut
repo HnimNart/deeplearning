@@ -83,7 +83,7 @@ module normal_random_array (R:real) : random_generator
   let gen_rand (seed: i32) : t =
     let rng = dist.engine.rng_from_seed [seed]
     let (_, x) = dist.rand stdnorm rng in
-    R.(x / i32 10)
+    R.(x / i32 100)
 
   let gen_random_array (d: i32) (seed:i32) : []t =
     map gen_rand (map (\x -> x + d + seed) (iota d))
@@ -101,11 +101,12 @@ module type util = {
 
   type t
   val multMatrix: [][]t -> [][]t -> [][]t
-  val subMatrix: [][]t -> [][]t -> [][]t
   val multV: []t -> []t -> []t
   val addbias: []t -> []t -> []t
   val scaleV : []t -> t -> []t
   val subV : []t -> []t -> []t
+  val scaleMatrix: [][]t -> t -> [][]t
+  val subMatrix: [][]t -> [][]t -> [][]t
 }
 
 module utility_funcs (R:real) : util with t = R.t = {
@@ -118,15 +119,20 @@ module utility_funcs (R:real) : util with t = R.t = {
   let multV [m] (X:[m]t) (Y:[m]t) : [m]t =
     map2 (\x y -> R.(x * y)) X Y
 
-  let subMatrix [m][n] (X: [m][n]t) (Y:[m][n]t) : [m][n]t =
-    map2 (\xr yr -> map2 (\xc yc -> R.(xc - yc)) xr yr) X Y
-
   let addbias [m] (X:[m]t) (b:[m]t) =
     map2 (\x y -> R.(x + y) ) X b
 
- let scaleV [d] (x: [d]t) (a: t): [d]t =
-     map (\x -> R.(x * a) ) x
+  let scaleV [d] (x: [d]t) (a: t): [d]t =
+    map (\x -> R.(x * a) ) x
+
+  let scaleMatrix [m][n] (X: [m][n]t) (s:t) : [m][n]t =
+    map (\x -> scaleV x s) X
 
   let subV [d] (x: [d]t) (y: [d]t) : [d]t =
     map2 (\x y -> R.(x - y)) x y
+
+  let subMatrix [m][n] (X: [m][n]t) (Y:[m][n]t) : [m][n]t =
+    map2 (\xr yr -> map2 (\x y -> R.(x - y)) xr yr) X Y
+
+
 }
