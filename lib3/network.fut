@@ -76,30 +76,7 @@ let train 'w  'g 'e2  ((f,b,w):NN ([][]f32) w ([][]f32) g ([][]f32) e2) (input:[
   in (f,b,w')
 
 
+
+
 -- let accuracy 'w  'g 'e2 'wo ((f,_,w):NN ([][]f32) w ([][]f32) g ([][]f32) e2 wo) (input:[][]f32) (labels:[][]f32)  =
 --   let (_, output) = f w (transpose input)
-
-
-
-let n = 1
-let n_input = 16
-let n_class = 2
-let input  = unflatten n n_input (random.gen_random_array (n_input*n))
-let labels = unflatten n n_class (random.gen_random_array (n_class*n))
--- let w = unflatten 256 784 (random.gen_random_array (784*256) 1)
--- let b = unflatten 256 1 (random.gen_random_array 256 1)
-
--- let tmp = 100
-let main = let l1 = dense (16, 8) 0 false
-           let l2 = dense (8, 4) 0 false
-           let l3 = dense (4, 2) 0 true
-           let nn'  = combine l1 l2
-           let model1  = combine nn' l3
-           let (_,w1) = model1.3
-           let model2  = train model1 input labels 0.01
-           let model3  = train model2 input labels 0.01
-           let (_, w3) = model3.3
-           in (w1.2,w3.2)
-           -- let (os, o) = f w (transpose input)
-           -- let error = map2 (\xr yr -> map2 (\x y -> x - y) xr yr) (transpose labels) o
-           -- let (_, w')   = b w (os) error in w'
