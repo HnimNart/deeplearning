@@ -1,10 +1,10 @@
 import "../lib3/network"
 
-let n = 1
-let n_input = 728
-let n_class = 2
-let input1  = unflatten n n_input (random.gen_random_array (n_input*n))
--- let labels = unflatten n n_class (random.gen_random_array (n_class*n))
+let n = 10
+let n_input = 784
+let n_class = 10
+let input  = unflatten n_input n (random.gen_random_array (n_input*n))
+let labels = unflatten n_class n (random.gen_random_array (n_class*n))
 -- let w = unflatten 256 784 (random.gen_random_array (784*256) 1)
 -- let b = unflatten 256 1 (random.gen_random_array 256 1)
 
@@ -16,9 +16,10 @@ let nn'   = combine l1 l2
 let model = combine nn' l3
 
 
-let main [m][n][d] (input: [m][d]f32) (labels: [m][n]f32) =
+-- let main [m][n][d] (input: [m][d]f32) (labels: [m][n]f32) =
+let main =
   -- (length (transpose input1)[0], length (transpose [input[0]])[0] )
   let data_sets = 64000
-  let batch_size = 1
-  let i = 0
-  let m  = map (\i -> let (_,_,v) = train model [input[i]] [labels[i]] 0.01 in v) (0..<1000) in m[999]
+  let (f, _, w) = model
+  in f w input
+  -- let tmp = train model input labels 0.01 in tmp.3
