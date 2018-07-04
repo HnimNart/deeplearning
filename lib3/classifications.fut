@@ -1,5 +1,4 @@
 
-let tmp  = 10
 module type classification = {
 
   type t
@@ -20,7 +19,7 @@ module softmax_stable (R:real): classification with t = R.t = {
       in  map (\x -> R.(x / sumexps)) exps
 
   let classify2 (X:[][]t) =
-      map (\x -> classify x) X
+      transpose (map (\x -> classify x) (transpose X))
 }
 
 -- module type classification_funcs = {
