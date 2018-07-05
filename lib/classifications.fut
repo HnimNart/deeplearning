@@ -19,7 +19,7 @@ module softmax_stable (R:real): classification with t = R.t = {
       in  map (\x -> R.(x / sumexps)) exps
 
   let classify2 (X:[][]t) =
-      transpose (map (\x -> classify x) (transpose X))
+      (map (\x -> classify x) (X))
 }
 
 -- module type classification_funcs = {

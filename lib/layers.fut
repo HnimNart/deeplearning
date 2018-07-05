@@ -54,19 +54,19 @@ module dense (R:real) : layer with t = R.t
 
   let alpha:t = R.(i32 1 / i32 100)
 
-   ---- Each input is in a column
+   ---- Each input is in a row
   let forward  (act:act) ((w,b):weights) (input:input) : output =
-    let product = lalg.matmul w input
+    let product = lalg.matmul w (transpose input)
     let product' = map2 (\xr b -> map (\x -> (R.(x + b[0]))) xr) product b
     let (m, k) = (length product', length product'[0])
     let output = act (flatten product')
-   in unflatten m k output
+   in transpose (unflatten m k output)
 
   let backward (act:act) (l_layer:bool) ((w,b):weights) (input:input) (error:error_in)  =
     if l_layer then
-      let error_corrected = (map (map R.((/i32 128))) error)
+      let error_corrected = (map (map R.((/i32 128))) (transpose error))
 
-      let grad            = lalg.matmul error_corrected (transpose input)
+      let grad            = lalg.matmul (error_corrected) (input)
       let error_reduced   = transpose  [map (R.sum) error_corrected]
 
       let error_scaled   = util.scaleMatrix error_reduced alpha
@@ -77,11 +77,11 @@ module dense (R:real) : layer with t = R.t
       let error'         = lalg.matmul (transpose w) error_corrected
       in (error', (w', b'))
     else
-      let res            = lalg.matmul (w) input
+      let res            = lalg.matmul (w) (transpose input)
       let (res_m, res_n) = (length res, length res[0])
       let deriv          = unflatten res_m res_n (act (flatten res))
       let delta          = util.multMatrix error deriv
-      let grad           = lalg.matmul delta (transpose input)
+      let grad           = lalg.matmul delta (input)
       let delta_scaled   = util.scaleMatrix delta alpha
       let grad_scaled    = util.scaleMatrix grad alpha
       let b_grad         = transpose [map (R.sum) delta_scaled]

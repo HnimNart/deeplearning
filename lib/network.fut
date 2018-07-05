@@ -48,8 +48,8 @@ module network (R:real) : {
     let i = 0
     let batch_size = 128
     let (w',_) = loop (w, i) while i < 64000 do
-             let inp' = getCols input i batch_size
-             let lab  = getCols labels i batch_size
+             let inp' = input[i:i+batch_size]-- getCols input i batch_size
+             let lab  = labels[i:i+batch_size]-- getCols labels i batch_size
              let (os, output) = f w (inp')
              let error = cross.derivative (lab) output
              let (_, w') = b w os error
@@ -65,9 +65,9 @@ module network (R:real) : {
     let labels_i:i32 = (reduce (\n i -> if unsafe (R.(labels[n] > labels[i])) then n else i) 0 (iota n))
     in if logits_i == labels_i  then 1 else 0
 
-  let accuracy [d][c] 'w 'g 'e2 (nn:NN ([][]t) w ([][]t) g ([][]t) e2) (input:[][d]t) (labels:[c][d]t) : t=
-    let predictions = transpose (predict nn input)
-    let labels_T    =   transpose (labels)
+  let accuracy [d][c] 'w 'g 'e2 (nn:NN ([][]t) w ([][]t) g ([][]t) e2) (input:[d][]t) (labels:[d][c]t) : t=
+    let predictions = (predict nn input)
+    let labels_T    = (labels)
     let hits        = map2 (\x y -> is_equal x y) predictions labels_T
     let total       = reduce (+) 0 hits
     in R.(i32 total / i32 d)
