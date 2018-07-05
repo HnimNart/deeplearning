@@ -70,7 +70,8 @@ let diag2d [n] (x: [n]f64) =
 module type random_generator = {
 
  type t
- val gen_random_array: i32 -> i32 -> []t
+  val gen_random_array: i32 -> i32 -> []t
+  val gen_random_array_2d: (i32, i32) -> i32 -> [][]t
 }
 
 module normal_random_array (R:real) : random_generator
@@ -80,20 +81,20 @@ module normal_random_array (R:real) : random_generator
 
   module dist = normal_distribution R minstd_rand
   let stdnorm = {mean = R.(i32 0), stddev = R.(i32 1)}
+
   let gen_rand (i: i32) : t =
     let rng = dist.engine.rng_from_seed [i]
     let (_, x) = dist.rand stdnorm rng in
-    R.(x / i32 10)
+    x
 
   let gen_random_array (d: i32) (seed: i32) : []t =
     map gen_rand (map (\x -> x + d + seed) (iota d))
 
-    -- let rng = dist.engine.rng_from_seed [seed]
-    -- let tmp2 = replicate d (R.(i32 0))
-    -- let tmp = replicate d rng
-    -- let s = scan ( \(r,_) (_,_) -> dist.rand stdnorm r) (rng, R.(i32 0)) (zip tmp tmp2)
-    -- let (_, res) = unzip s
-    -- in map (\x -> R.(x / i32 100)) res
+  let gen_random_array_2d ((m,n):(i32, i32)) (seed:i32) : [][]t =
+    let n_sqrt = R.(sqrt (i32 n / i32 2))
+    let arr = gen_random_array (m*n) seed
+    in unflatten n m (map (\x -> R.(x / n_sqrt)) arr)
+
 }
 
 ---- Usefull funcs ------

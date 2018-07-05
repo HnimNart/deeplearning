@@ -46,8 +46,8 @@ module network (R:real) : {
 
   let train 'w  'g 'e2  ((f,b,w):NN ([][]t) w ([][]t) g ([][]t) e2) (input:[][]t) (labels:[][]t) (alpha:t) =
     let i = 0
-    let batch_size = 128
-    let (w',_) = loop (w, i) while i < 64000 do
+    let batch_size = 100
+    let (w',_) = loop (w, i) while i < 10000 do
              let inp' = input[i:i+batch_size]-- getCols input i batch_size
              let lab  = labels[i:i+batch_size]-- getCols labels i batch_size
              let (os, output) = f w (inp')

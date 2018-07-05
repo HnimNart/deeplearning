@@ -91,8 +91,8 @@ module dense (R:real) : layer with t = R.t
     in (error', (w', b'))
 
   let layer ((m,n):(i32,i32)) (act_id: (act, act)) (l_layer:bool)  =
-    let w = unflatten n m (random.gen_random_array (m*n) 2)
-    let b = unflatten n 1 (random.gen_random_array (n)  2)
+    let w = random.gen_random_array_2d (m,n) 1
+    let b = random.gen_random_array_2d (1, n)  1
     in
     (\w input -> (input, forward act_id.1 w input),
     (backward act_id.2 l_layer),
