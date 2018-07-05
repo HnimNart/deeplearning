@@ -1,7 +1,5 @@
 
 
-
-
 module activations (R:real) : {
 
   type t = R.t

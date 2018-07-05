@@ -1,13 +1,17 @@
-import "../lib3/network"
+import "../lib/network"
+import "../lib/activations"
 
-let l1    = dense (784, 256) 0 false
-let l2    = dense (256, 128) 0 false
-let l3    = dense (128, 10) 0 true
-let nn'   = combine l1 l2
-let model = combine nn' l3
+module tf = network f32
+module act = activations f32
+
+let l1    = tf.dense.layer (784, 256) act.Identity_1d false
+let l2    = tf.dense.layer (256, 256) act.Identity_1d false
+let l3    = tf.dense.layer (256, 10) act.Identity_1d true
+let nn'   = tf.combine l1 l2
+let model = tf.combine nn' l3
 
 
-let main [m][n][d] (input: [m][d]f32) (labels: [m][n]f32) =
-  let nn = train model (transpose input) (transpose labels) 0.01
-  in (accuracy nn (transpose input) (transpose labels),
-      accuracy model (transpose input) (transpose labels))
+let main [m][n][d] (input: [m][d]tf.t) (labels: [m][n]tf.t) =
+  let nn = tf.train model (transpose input) (transpose labels) 0.01
+  in (tf.accuracy nn (transpose input) (transpose labels),
+      tf.accuracy model (transpose input) (transpose labels))
