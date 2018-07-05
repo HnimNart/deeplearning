@@ -43,6 +43,7 @@ let dense_backwards [m][n][d]  (act_id:i32) (l_layer:bool) ((w,b):([][]f32, [][]
     let res            = lalg.matmul (w) input
     let (res_m, res_n) = (length res, length res[0])
     let deriv          = unflatten res_m res_n (activation.calc_derivative (flatten res) act_id)
+    -- let error_corrected = (map (map ((/f32.(i32 n)))) error)
     let delta          = util.multMatrix error deriv
     let grad           = lalg.matmul delta (transpose input)
     let delta_scaled   = util.scaleMatrix delta 0.01
@@ -74,8 +75,7 @@ let combine 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22  ((f1, b1,ws1): NN i1 w1 o1
 
 
 let getCols [m][n] (M:[m][n]f32) (i:i32) (c:i32) : [m][c]f32 =
-  map (\x -> x[i: i + c]) M
-
+  M[:,i:i+c]
 
 let train 'w  'g 'e2  ((f,b,w):NN ([][]f32) w ([][]f32) g ([][]f32) e2) (input:[][]f32) (labels:[][]f32) (alpha:f32) =
   let i = 0

@@ -9,4 +9,5 @@ let model = combine nn' l3
 
 let main [m][n][d] (input: [m][d]f32) (labels: [m][n]f32) =
   let nn = train model (transpose input) (transpose labels) 0.01
-  in (accuracy nn (transpose input) (transpose labels), accuracy model (transpose input) (transpose labels))
+  in (accuracy nn (transpose input) (transpose labels),
+      accuracy model (transpose input) (transpose labels))

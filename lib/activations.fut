@@ -1,107 +1,107 @@
-import "util"
 
 
-module type activation_function = {
 
-  type t
-  val func: []t -> []t
-  val derivative : []t -> []t
 
-}
-
--- relu6
--- Nice to have activation functions
--- softplus
--- dropout
--- softsign
--- selu
--- elu
-
-module Identity (R:real) : activation_function with t = R.t = {
+module activations (R:real) : {
 
   type t = R.t
 
-  let func [m] (X:[m]t) =
+  type act_pair_1d = ([]t -> []t, []t-> []t)
+  val Identity_1d: act_pair_1d
+  val Sigmoid_1d: act_pair_1d
+  val Relu_1d: act_pair_1d
+  val Tanh_1d: act_pair_1d
+
+  type act_pair_2d =  ([][]t -> [][]t, [][]t -> [][]t)
+  val Identity_2d: act_pair_2d
+  val Sigmoid_2d: act_pair_2d
+  val Relu_2d: act_pair_2d
+  val Tanh_2d: act_pair_2d
+
+
+} = {
+
+  type t = R.t
+
+  type act_pair_1d = ([]t -> []t, []t -> []t)
+  type act_pair_2d = ([][]t -> [][]t, [][]t -> [][]t)
+
+  let identity_1d (X:[]t) : []t  =
     X
 
-  let derivative [m] (X:[m]t) =
+  let identity_1d' [m] (X:[m]t) : [m]t =
     map (\_ -> R.(i32 1)) X
-}
 
--- SIGMOID ----------
-module Sigmoid (R: real) : activation_function  with t = R.t = {
+  let identity_2d (x:[][]t) : [][]t =
+    x
 
-   type t = R.t
+  let identity_2d' (X:[][]t): [][]t =
+    map (\x -> identity_1d' x) X
 
-   let multMatrix [m] (X: [m]t) (Y:[m]t) : [m]t =
-     map2 (\x y -> R.(x * y))  X Y
+  let sigmoid_1d (X:[]t) : []t =
+    map (\x -> R.(i32 1/(i32 1 + exp (negate x)))) X
 
-   let func [m] (X: [m]t) =
-     map (\xc -> R.(i32 1 /(i32 1 + exp (negate xc)))) X
+  let sigmoid_1d' (X:[]t) : []t =
+    map (\x -> R.(x * ((i32 1) - x))) (sigmoid_1d X)
 
-   let derivative [m] (X: [m]t) =
-    map (\xc -> R.( xc * ((i32 1) - xc))) X
+  let sigmoid_2d (X:[][]t) : [][]t =
+    map (\x -> sigmoid_1d x) X
 
-   let derivative' [m] (X: [m]t) =
-    let X' = func X
-    in map (\xc -> R.( xc * ((i32 1) - xc))) X'
+  let sigmoid_2d' (X:[][]t): [][]t =
+    map (\x -> sigmoid_1d' x) X
+
+  let relu_1d (X:[]t) :[]t =
+    map (\x -> R.(max x (i32 0))) X
+
+  let relu_1d' (X:[]t) : []t =
+    map (\x -> R.(if x <= i32 0 then i32 0 else x)) X
+
+  let relu_2d (X:[][]t) :[][]t =
+    map (\x -> relu_1d x) X
+
+  let relu_2d' (X:[][]t) :[][]t =
+    map (\x -> relu_1d' x) X
+
+  let tanh_1d (X:[]t) : []t =
+    map (\x -> R.((exp x - exp(negate x)) / ((exp x) + exp (negate x)))) X
+
+  let tanh_1d' (X:[]t) : []t =
+    map (\x -> R.(i32 1 - x**(i32 2))) (tanh_1d X)
+
+  let tanh_2d (X:[][]t) : [][]t =
+    map (\x -> tanh_1d x) X
+
+  let tanh_2d' (X:[][]t) : [][]t =
+    map (\x -> tanh_1d' x) X
 
 
-}
 
--------- RELU ----------
-module Relu (R: real): activation_function with t = R.t= {
+----- Collections --------
 
-  type t = R.t
+  let Identity_1d  =
+    (identity_1d, identity_1d')
 
-  let func [m](X : [m]t) =
-    map (\x -> R.(if x < i32 0 then i32 0 else x)) X
+  let Identity_2d  =
+    (identity_2d, identity_2d')
 
-  let derivative [m] (X: [m]t) =
-    map (\x -> R.(if x <=  i32 0 then i32 0 else i32 1)) X
-}
+  let Sigmoid_1d =
+    (sigmoid_1d, sigmoid_1d')
 
------ TANH ---------
-module Tanh (R:real): activation_function with t = R.t = {
+  let Sigmoid_2d =
+    (sigmoid_2d, sigmoid_2d')
 
-   type t = R.t
-   let tanhsingle (x: t) =
-     R.((exp x - exp(negate x)) / ((exp x) + exp (negate x)))
+  let Relu_1d =
+    (relu_1d, relu_1d')
 
-   let func [m] (X: [m]t) =
-     map (\x ->  R.(tanhsingle x)) X
+  let Relu_2d =
+    (relu_2d, relu_2d')
 
-   let derivative [m] (X: [m]t) =
-     map (\x -> R.(i32 1 - tanhsingle(x)**(i32 2))) X
-}
+  let Tanh_1d =
+    (tanh_1d, tanh_1d')
 
-module type activation_funcs = {
+  let Tanh_2d =
+    (tanh_2d, tanh_2d')
 
-  type t
-  val calc_activation: []t -> i32 -> []t
-  val calc_derivative: []t -> i32 -> []t
 
-}
 
-module activation_funcs_coll (R:real) : activation_funcs with t = R.t = {
-
-  type t = R.t
-  module identity = Identity R
-  module tanh = Tanh R
-  module sigmoid = Sigmoid R
-  module relu = Relu R
-
-  let calc_activation [m] (data: [m]t) (func: i32) =
-    if func == 0 then data
-    else if func == 1 then relu.func data
-    else if func == 2 then sigmoid.func data
-    else if func == 3 then tanh.func data
-    else data
-
-  let calc_derivative [m] (data:[m]t) (func: i32) =
-    if func == 0 then identity.derivative data
-    else if func == 1 then relu.derivative data
-    else if func == 2 then sigmoid.derivative data
-    else if func == 3 then tanh.derivative data
-    else identity.derivative data
 }
