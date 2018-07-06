@@ -16,7 +16,6 @@ module network (R:real) : {
   val combine 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22: NN i1 w1 o1 g1 e22 e1 -> NN o1 w2 o2 g2 e2 e22 -> NN i1 (w1, w2) (o2) (g1,g2) (e2) (e1)
 
 
-  val train 'w 'g 'e2: NN ([][]t) w ([][]t) g ([][]t) e2 -> [][]t -> [][]t -> t -> NN ([][]t) w ([][]t) g ([][]t) e2
   val accuracy 'w 'g 'e2 :NN ([][]t) w ([][]t) g ([][]t) e2 -> [][]t -> [][]t -> t
 } = {
 
@@ -25,11 +24,10 @@ module network (R:real) : {
   type dense_tp = NN ([][]t) ([][]t, [][]t) ([][]t) ([][]t) ([][]t) ([][]t)
 
   module dense = dense R
+  module clas = classification R
 
-  module cross = softmax_cross_entropy_with_logits R
-  module soft = softmax_stable R
 
-  let combine 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22  ((f1, b1,ws1): NN i1 w1 o1 g1 e22 e1) ((f2, b2,ws2):NN o1 w2 o2 g2 e2 e22)
+  let combine 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22  ((f1, b1, u1,ws1): NN i1 w1 o1 g1 e22 e1) ((f2, b2, u2,ws2):NN o1 w2 o2 g2 e2 e22)
                                                                                     : NN i1 (w1,w2) (o2) (g1,g2) (e2) (e1) =
     ((\(w1, w2) (input) ->  let (g1, res)  = f1 w1 input
                             let (g2, res2) = f2 w2 res
@@ -38,27 +36,16 @@ module network (R:real) : {
                             let (err2, w2') = b2  w2 g2 error
                             let (err1, w1') = b1 w1 g1 err2
                             in (err1, (w1', w2'))),
+     (\(w1, w2) (wg1, wg2)  ->
+                            let w1' = u1 w1 wg1
+                            let w2' = u2 w2 wg2
+                            in (w1', w2')),
      (ws1, ws2))
 
 
-  let getCols [m][n] (M:[m][n]t) (i:i32) (c:i32) : [m][c]t =
-    M[:,i:i+c]
-
-  let train 'w  'g 'e2  ((f,b,w):NN ([][]t) w ([][]t) g ([][]t) e2) (input:[][]t) (labels:[][]t) (alpha:t) =
-    let i = 0
-    let batch_size = 100
-    let (w',_) = loop (w, i) while i < 10000 do
-             let inp' = input[i:i+batch_size]-- getCols input i batch_size
-             let lab  = labels[i:i+batch_size]-- getCols labels i batch_size
-             let (os, output) = f w (inp')
-             let error = cross.derivative (lab) output
-             let (_, w') = b w os error
-             in (w', i+ batch_size)
-    in (f,b,w')
-
-  let predict 'w 'g 'e2 ((f,_,w):NN ([][]t) w ([][]t) g ([][]t) e2) (input:[][]t)  =
+  let predict 'w 'g 'e2 ((f,_, _ ,w):NN ([][]t) w ([][]t) g ([][]t) e2) (input:[][]t)  =
     let (_, output) = f w input
-    in soft.classify2 output
+    in clas.softmax_2d output
 
   let is_equal [n] (logits:[n]t) (labels:[n]t) =
     let logits_i:i32 = (reduce (\n i -> if unsafe (R.(logits[n] > logits[i])) then n else i) 0 (iota n))
