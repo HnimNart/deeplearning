@@ -19,11 +19,11 @@ module type layer = {
 
   -- val forward: act -> weights -> input -> output
   -- val backward:  act -> bool ->  weights ->  input -> error_in -> gradients
-  val layer: (i32, i32) -> (act, act) -> bool -> layer
+  val layer: (i32, i32) -> (act, act) -> layer
 
   val get_ws: layer -> weights
   val get_f: layer -> weights -> input -> (input, output)
-  val get_b: layer -> weights ->  input -> error_in -> gradients
+  val get_b: layer -> bool -> weights ->  input -> error_in -> gradients
 }
 
 module dense (R:real) : layer with t = R.t
@@ -33,7 +33,7 @@ module dense (R:real) : layer with t = R.t
                               with error_in = ([][]R.t)
                               with error_out = ([][]R.t)
                               with gradients = ([][]R.t ,([][]R.t, [][]R.t))
-                              with layer = NN ([][]R.t) ([][]R.t,[][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) ([][]R.t)
+                    with layer = NN ([][]R.t) ([][]R.t,[][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) (R.t)
                               with act = ([]R.t -> []R.t) = {
 
   type t = R.t
@@ -46,13 +46,11 @@ module dense (R:real) : layer with t = R.t
   type gradients = (error_out, weights)
 
   type act = []t -> []t
-  type layer = NN input weights output garbage error_in error_out
+  type layer = NN input weights output garbage error_in error_out t
 
   module lalg   = linalg R
   module util   = utility_funcs R
   module random = normal_random_array R
-
-  let alpha:t = R.(i32 1 / i32 100)
 
    ---- Each input is in a row
   let forward  (act:act) ((w,b):weights) (input:input) : output =
@@ -64,10 +62,10 @@ module dense (R:real) : layer with t = R.t
 
   let backward (act:act) (l_layer:bool) ((w,_):weights) (input:input) (error:error_in)  =
     if l_layer then
-      let error_corrected = (map (map R.((/i32 128))) (transpose error))
-      let w_grad            = lalg.matmul (error_corrected) (input)
-      let b_grad = transpose  [map (R.sum) error_corrected]
-      let error'         = lalg.matmul (transpose w) error_corrected
+      let error_corrected = (map (map R.((/i32 (length input) ))) (transpose error))
+      let w_grad          = lalg.matmul (error_corrected) (input)
+      let b_grad          = transpose  [map (R.sum) error_corrected]
+      let error'          = lalg.matmul (transpose w) error_corrected
       in (error', (w_grad, b_grad))
     else
       let res            = lalg.matmul (w) (transpose input)
@@ -79,21 +77,22 @@ module dense (R:real) : layer with t = R.t
       let error'         = lalg.matmul (transpose w) delta
       in (error', (w_grad, b_grad))
 
-  let update ((w,b): weights) ((wg,bg):weights) =
+  let update (alpha:t) ((w,b): weights) ((wg,bg):weights)  =
     let bg_scaled        = util.scaleMatrix bg alpha
-    let wg_scaled        = util.scaleMatrix wg alpha
-    -- let b_grad           = transpose [map (R.sum) bg_scaled]
+    -- let wg' = map (\xr -> map (\x -> R.(max (i32 1) (min (negate (i32 1)) x ))) xr) wg
+    let wg'  = map (\xr -> map (\x -> R.(if x > i32 1 then i32 1 else if x < (negate (i32 1)) then (negate (i32 1)) else x)) xr ) wg
+    let wg_scaled        = util.scaleMatrix wg' alpha
     let w'               = util.subMatrix w wg_scaled
     let b'               = util.subMatrix b bg_scaled
     in (w', b')
 
 
-  let layer ((m,n):(i32,i32)) (act_id: (act, act)) (l_layer:bool)  =
+  let layer ((m,n):(i32,i32)) (act_id: (act, act))   =
     let w = random.gen_random_array_2d (m,n) 1
-    let b = random.gen_random_array_2d (1, n)  1
+    let b = unflatten n 1 (map (\_ -> R.( i32 0)) (0..<n)) -- random.gen_random_array_2d (1, n)  1
     in
     (\w input -> (input, forward act_id.1 w input),
-     (backward act_id.2 l_layer),
+     (backward act_id.2),
       update,
      (w,b))
 
@@ -105,20 +104,29 @@ module dense (R:real) : layer with t = R.t
 
 module layers (R:real) :{
 
-  -- type act_pair_1d
-  -- type dense
-  -- val dense:  (i32, i32) -> act_pair_1d -> bool -> dense
-
   type t = R.t
-  type dense_tp = NN ([][]t) ([][]t, [][]t) ([][]t) ([][]t) ([][]t) ([][]t)
-  module dense : layer with t = R.t with input = [][]R.t with weights = ([][]R.t, [][]R.t) with output = [][]R.t
-                       with error_in = ([][]R.t) with error_out = ([][]R.t) with gradients = ([][]R.t, ([][]R.t, [][]R.t))
-                       with act = ([]R.t -> []R.t) with layer = dense_tp
+  type dense_tp = NN ([][]t) ([][]t, [][]t) ([][]t) ([][]t) ([][]t) ([][]t) t
+  module dense : layer with t = R.t
+                       with input = [][]R.t
+                       with weights = ([][]R.t, [][]R.t)
+                       with output = [][]R.t
+                       with error_in = ([][]R.t)
+                       with error_out = ([][]R.t)
+                       with gradients = ([][]R.t, ([][]R.t, [][]R.t))
+                       with act = ([]R.t -> []R.t)
+                       with layer = dense_tp
+
+   val Dense: (i32, i32) -> (dense.act, dense.act) -> dense.layer
+
 } = {
 
   type t = R.t
-  type dense_tp = NN ([][]t) ([][]t, [][]t) ([][]t) ([][]t) ([][]t) ([][]t)
+  type dense_tp = NN ([][]t) ([][]t, [][]t) ([][]t) ([][]t) ([][]t) ([][]t) t
   module dense = dense R
+
+
+  let Dense ((m,n):(i32,i32)) (act_id: (dense.act, dense.act))  =
+      dense.layer (m,n) act_id
 
   -- type act_pair_1d = i32
   -- type dense = NN
