@@ -16,24 +16,26 @@ module type layer = {
 
   type act
   type layer
+  type input_params
 
   -- val forward: act -> weights -> input -> output
   -- val backward:  act -> bool ->  weights ->  input -> error_in -> gradients
-  val layer: (i32, i32) -> (act, act) -> layer
+  val layer: input_params -> (act, act) -> layer
 
-  val get_ws: layer -> weights
-  val get_f: layer -> weights -> input -> (input, output)
-  val get_b: layer -> bool -> weights ->  input -> error_in -> gradients
+  -- val get_ws: layer -> weights
+  -- val get_f: layer -> weights -> input -> (input, output)
+  -- val get_b: layer -> bool -> weights ->  input -> error_in -> gradients
 }
 
 module dense (R:real) : layer with t = R.t
                               with input = [][]R.t
                               with weights = ([][]R.t, [][]R.t)
+                              with input_params = (i32, i32)
                               with output  = ([][]R.t)
                               with error_in = ([][]R.t)
                               with error_out = ([][]R.t)
                               with gradients = ([][]R.t ,([][]R.t, [][]R.t))
-                    with layer = NN ([][]R.t) ([][]R.t,[][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) (R.t)
+                              with layer = NN ([][]R.t) ([][]R.t,[][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) (R.t)
                               with act = ([]R.t -> []R.t) = {
 
   type t = R.t
@@ -44,6 +46,7 @@ module dense (R:real) : layer with t = R.t
   type error_in = [][]t
   type error_out = [][]t
   type gradients = (error_out, weights)
+  type input_params = (i32, i32)
 
   type act = []t -> []t
   type layer = NN input weights output garbage error_in error_out t
@@ -87,9 +90,9 @@ module dense (R:real) : layer with t = R.t
     in (w', b')
 
 
-  let layer ((m,n):(i32,i32)) (act_id: (act, act))   =
+  let layer ((m,n):input_params) (act_id: (act, act))   =
     let w = random.gen_random_array_2d (m,n) 1
-    let b = unflatten n 1 (map (\_ -> R.( i32 0)) (0..<n)) -- random.gen_random_array_2d (1, n)  1
+    let b = unflatten n 1 (map (\_ -> R.( i32 0)) (0..<n))
     in
     (\w input -> (input, forward act_id.1 w input),
      (backward act_id.2),

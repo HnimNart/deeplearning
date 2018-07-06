@@ -72,6 +72,8 @@ module type random_generator = {
  type t
   val gen_random_array: i32 -> i32 -> []t
   val gen_random_array_2d: (i32, i32) -> i32 -> [][]t
+  val gen_random_array_3d: (i32,i32, i32) -> i32 -> [][][]t
+
 }
 
 module normal_random_array (R:real) : random_generator
@@ -95,6 +97,10 @@ module normal_random_array (R:real) : random_generator
     let arr = gen_random_array (m*n) seed
     in unflatten n m (map (\x -> R.(x / n_sqrt)) arr)
 
+  let gen_random_array_3d ((m,n, p):(i32, i32, i32)) (seed:i32) : [][][]t =
+    map (\i -> gen_random_array_2d (m,n) (seed*i)) (0..<p)
+
+
 }
 
 ---- Usefull funcs ------
@@ -108,6 +114,7 @@ module type util = {
   val subV : []t -> []t -> []t
   val scaleMatrix: [][]t -> t -> [][]t
   val subMatrix: [][]t -> [][]t -> [][]t
+  val add_matrix: [][]t -> [][]t -> [][]t
 }
 
 module utility_funcs (R:real) : util with t = R.t = {
@@ -116,6 +123,10 @@ module utility_funcs (R:real) : util with t = R.t = {
   -- Element wise
   let multMatrix  [m][n] (X: [m][n]t) (Y:[m][n]t) : [m][n]t =
     map2 (\xr yr -> map2 (\xc yc -> R.(xc * yc)) xr yr) X Y
+
+  let add_matrix (X:[][]t) (Y:[][]t) =
+    map2 (\xr yr -> map2 (\x y -> R.(x + y)) xr yr) X Y
+
 
   let multV [m] (X:[m]t) (Y:[m]t) : [m]t =
     map2 (\x y -> R.(x * y)) X Y

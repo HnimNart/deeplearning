@@ -23,8 +23,8 @@ module sgd (R:real) : optimizer with t = R.t = {
   let train 'w 'g 'e2 'i ((f,b,u,w):NN ([]i) w ([][]t) g ([][]t) e2 t) (alpha:t) (input:[]i) (labels:[][]t) (step_sz: i32)=
     let i = 0
     let (w',_) = loop (w, i) while i < length input - 1 do
-             let inp' = input[i:i+step_sz]-- getCols input i batch_size
-             let lab  = labels[i:i+step_sz]-- getCols labels i batch_size
+             let inp' = input[i:i+step_sz]
+             let lab  = labels[i:i+step_sz]
              let (os, output) = f w (inp')
              let error = loss.softmax_cross_entropy_with_logits lab output
              let (_, grads) = b true w os error
