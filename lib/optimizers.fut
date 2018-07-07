@@ -1,6 +1,5 @@
 import "loss"
 import "types"
-import "util"
 
 module type optimizer = {
 
@@ -17,7 +16,6 @@ module sgd (R:real) : optimizer with t = R.t = {
   type t = R.t
 
   module loss = loss R
-  module util   = utility_funcs R
 
 
   let train 'w 'g 'e2 'i ((f,b,u,w):NN ([]i) w ([][]t) g ([][]t) e2 t) (alpha:t) (input:[]i) (labels:[][]t) (step_sz: i32)=

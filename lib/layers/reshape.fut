@@ -33,12 +33,13 @@ module flatten (R:real) : layer with t = R.t
 
 
    let forward (_:weights) (input:input) : output =
-     (map (\x -> flatten x) input)
+     [flatten_3d input]
 
 
   let backward (_:bool) (_: weights) (input:input) (error:error_in) : gradients =
-    let (m,n) = (length input[0], length input[0,0])
-    in (map (\x -> unflatten m n x) (transpose error), () )
+    let (m,n, p) = (length input[0], length input[0,0], length input)
+    let err_flat = intrinsics.flatten (transpose error)
+    in (unflatten_3d p m n err_flat, ())
 
   let update (_:t) (_:weights) (_:weights)  = ()
 

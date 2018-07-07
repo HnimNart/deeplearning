@@ -9,9 +9,9 @@ module classification (R:real) : {
 
   type t = R.t
 
-  let softmax_1d_stable (x:[]t) =
-    let maxval = R.maximum x
-    let exps = map (\x -> R.(exp (x - maxval))) x
+  let softmax_1d_stable (X:[]t) =
+    let maxval = R.maximum X
+    let exps = map (\x -> R.(exp (x - maxval))) X
     let sumexps = R.(reduce (+) R.(i32 0) exps)
     in  map (\x -> R.(x / sumexps)) exps
 

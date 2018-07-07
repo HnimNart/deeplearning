@@ -51,12 +51,12 @@ module max_pooling_2d (R:real) : layer with t = R.t
     let width      = (l_n *n )
     let height     = (l_m * m)
     let total_elem = (height * width)
-    let index_flat = flatten ((map (\x -> flatten x)) input)
-    let offsets    = map (\(i,j) -> j + i * width) index_flat
-    let error_flat = flatten ((map (\x -> flatten x)) error)
+    let index_flat = map (\x -> flatten x) input
+    let offsets    = map (\f -> map (\(i,j) -> j + i * width) f ) index_flat
+    let error_flat = map (\x -> flatten x) error
     let retval     = map (\_ -> R.(i32 0)) (0..<(total_elem))
-    let error'     = scatter retval (offsets) (error_flat)
-    in ([unflatten height width error'], ())
+    let error'     = map2 (\o e -> scatter  (copy retval) o  e) offsets error_flat
+    in (map (\x -> unflatten height width x) error', ())
 
   let update (_:t) (_:weights) (_:weights) = ()
 

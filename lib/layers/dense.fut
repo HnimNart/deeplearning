@@ -29,7 +29,7 @@ module dense (R:real) : layer with t = R.t
   type layer = NN input weights output garbage error_in error_out t
 
   module lalg   = linalg R
-  module util   = utility_funcs R
+  module util   = utility R
   module random = normal_random_array R
 
    ---- Each input is in a row
@@ -51,24 +51,23 @@ module dense (R:real) : layer with t = R.t
       let res            = lalg.matmul (w) (transpose input) -- laeg bias til
       let (res_m, res_n) = (length res, length res[0])
       let deriv          = unflatten res_m res_n (act (flatten res))
-      let delta          = util.multMatrix error deriv
+      let delta          = util.mult_matrix error deriv
       let w_grad         = lalg.matmul delta (input)
       let b_grad         = transpose [map (R.sum) delta]
       let error'         = lalg.matmul (transpose w) delta
       in (error', (w_grad, b_grad))
 
   let update (alpha:t) ((w,b): weights) ((wg,bg):weights)  =
-    let bg_scaled        = util.scaleMatrix bg alpha
-    -- let wg' = map (\xr -> map (\x -> R.(max (i32 1) (min (negate (i32 1)) x ))) xr) wg
+    let bg_scaled        = util.scale_matrix bg alpha
     let wg'  = map (\xr -> map (\x -> R.(if x > i32 1 then i32 1 else if x < (negate (i32 1)) then (negate (i32 1)) else x)) xr ) wg
-    let wg_scaled        = util.scaleMatrix wg' alpha
-    let w'               = util.subMatrix w wg_scaled
-    let b'               = util.subMatrix b bg_scaled
+    let wg_scaled        = util.scale_matrix wg' alpha
+    let w'               = util.sub_matrix w wg_scaled
+    let b'               = util.sub_matrix b bg_scaled
     in (w', b')
 
 
   let layer ((m,n):input_params) (act_id: (act, act))   =
-    let w = random.gen_random_array_2d (m,n) 1
+    let w = random.gen_random_array_2d (m,n) 10
     let b = unflatten n 1 (map (\_ -> R.( i32 0)) (0..<n))
     in
     (\w input -> (input, forward act_id.1 w input),

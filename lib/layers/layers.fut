@@ -18,7 +18,7 @@ module layers (R:real) :{
                        with act = ([]R.t -> []R.t)
                        with layer = dense_tp
 
-   val Dense: (i32, i32) -> (dense.act, dense.act) -> dense.layer
+  val Dense: (i32, i32) -> (dense.act, dense.act) -> dense.layer
 
 } = {
 
