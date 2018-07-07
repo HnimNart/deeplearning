@@ -71,7 +71,7 @@ module dense (R:real) : layer with t = R.t
       let error'          = lalg.matmul (transpose w) error_corrected
       in (error', (w_grad, b_grad))
     else
-      let res            = lalg.matmul (w) (transpose input)
+      let res            = lalg.matmul (w) (transpose input) -- laeg bias til
       let (res_m, res_n) = (length res, length res[0])
       let deriv          = unflatten res_m res_n (act (flatten res))
       let delta          = util.multMatrix error deriv

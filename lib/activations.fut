@@ -52,7 +52,7 @@ module activations (R:real) : {
     map (\x -> R.(max x (i32 0))) X
 
   let relu_1d' (X:[]t) : []t =
-    map (\x -> R.(if x <= i32 0 then i32 0 else x)) X
+    map (\x -> R.(if x <= i32 0 then i32 0 else i32 1)) X
 
   let relu_2d (X:[][]t) :[][]t =
     map (\x -> relu_1d x) X
