@@ -1,8 +1,8 @@
-import "types"
-import "layer_types"
-import "activations"
+import "../types"
+import "layer_type"
+import "../activations"
 import "/futlib/linalg"
-import "util"
+import "../util"
 
 
 module conv2d (R:real) : layer with t = R.t
@@ -55,7 +55,7 @@ NN ([][][]R.t) ([][][]R.t,[]R.t) ([][][]R.t) ([][][]R.t) ([][][]R.t) ([][][]R.t)
     let (wm, wn) = (length w, length w[0])
     let (m_d, n_d) = (m-wm+1, n -wn+1)
     let res =
-      map (\layer -> map (\i -> map (\j -> red_matrix layer[i:i+wm,j:j+wn] w b) (0..<n_d)) (0..<m_d)) input
+      unsafe map (\layer -> map (\i -> map (\j -> red_matrix layer[i:i+wm,j:j+wn] w b) (0..<n_d)) (0..<m_d)) input
     let ne = replicate (m_d) (replicate (n_d) R.(i32 0))
     in reduce (util.add_matrix) ne res
 
@@ -64,8 +64,14 @@ NN ([][][]R.t) ([][][]R.t,[]R.t) ([][][]R.t) ([][][]R.t) ([][][]R.t) ([][][]R.t)
     in map (\layer -> act layer) res
 
 
-  let in_bounds = true
-  let full_convolve (input:[][]t) (w:[][]t) = 0
+  let add_padding (padding:i32) (X:[][]t) : [][]t =
+    let width = length X + padding*2
+    let height = length X[0] + padding *2
+    let total_elem = width * height
+    let index =  (flatten (map (\i -> (map (\j -> (i,j)) (0..<length X))) (0..<length X[0])))
+    let offsets = map (\(i,j) -> padding*width + padding + width * i + j) index
+    let retval = scatter (map (\_ -> R.(i32 0)) (0..<total_elem)) (offsets) (flatten X)
+    in unflatten height width retval
 
 
   let backward (act:act) (l_layer:bool) ((w,b): weights) (input:input) (error:error_in) : gradients =
@@ -73,11 +79,13 @@ NN ([][][]R.t) ([][][]R.t,[]R.t) ([][][]R.t) ([][][]R.t) ([][][]R.t) ([][][]R.t)
     if l_layer then
       (error, (w,b))
     else
-      let res = map2 (\w' b' -> convolve input w' b') w b
-      let deriv = map (\x -> act x) res
-      let delta = map2 (\x y -> util.multMatrix x y) error deriv
+      let b_grad       = map (\x -> (R.sum) (map (\y -> (R.sum) y) x) ) error
+      let grad_w       = map (\e -> convolve input e R.(i32 0)) error
+      let flip_filters = map (\x -> flip_matrix x) w
+      let add_pad      = map (\x -> add_padding 2 x) error
+      let error'       = map (\w' -> convolve add_pad w' R.(i32 0)) flip_filters
 
-    in (delta, (w,b))
+    in (error', (grad_w,b_grad))
 
 
   let update (alpha:t) ((w,b):weights) ((wg,bg):weights) =
@@ -103,18 +111,3 @@ module con = conv2d f32
 module rand = normal_random_array f32
 module act = activations f32
 module util = utility_funcs f32
-
-let input  = map (\i -> rand.gen_random_array_2d (3,3) i) (0..<1)
-let labels :[][]f32 = [[1.0, 0,0,0]]
-let l = con.layer (1, 2) act.Identity_2d
-
-let main  = let (f, b, _, w) = l
-            let (g, out ) = f w input
-            let out' = [flatten (flatten out)]
-            let loss = map2 (\xr yr -> map2 (\x y -> y - x) xr yr) labels out'
-            let error = map (\x -> unflatten 2 2 x) loss
-            let (err, (w', b')) = b false w g error in (err)
-
-            -- let (err, (w', b')) = b true w g loss in (w', err)
-
--- let w = [[4,5,6],[1,2,3]] in w[::-1]

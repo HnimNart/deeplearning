@@ -2,7 +2,7 @@ import "../lib/network"
 import "../lib/activations"
 import "../lib/classifications"
 import "../lib/optimizers"
-import "../lib/layers"
+import "../lib/layers/layers"
 
 module tf = network f32
 module layers = layers f32
@@ -17,9 +17,9 @@ let model = tf.combine nn' l3
 
 
 let main [m][n][d] (input: [m][d]tf.t) (labels: [m][n]tf.t) =
-  let trainer = sgd.sgd model 0.01 input labels
-  let nn = trainer 100
-  in tf.accuracy nn (input) (labels)
+  -- let trainer = sgd.sgd model 0.01 input labels
+  -- let nn = trainer 100
+  -- in tf.accuracy nn (input) (labels)
       -- tf.accuracy model (transpose input) (transpose labels))
 
 

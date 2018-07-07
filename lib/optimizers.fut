@@ -35,5 +35,4 @@ module sgd (R:real) : optimizer with t = R.t = {
   let sgd 'w 'g 'e2 'i (nn:NN ([]i) w ([][]t) g ([][]t) e2 t) (alpha:t) (input:[]i) (labels:[][]t) =
      train (nn) (alpha) input labels
 
-
 }

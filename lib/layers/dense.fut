@@ -1,31 +1,8 @@
-import "types"
-import "activations"
+import "layer_type"
+import "../types"
+import "../activations"
 import "/futlib/linalg"
-import "util"
-
-
-module type layer = {
-
-  type t
-  type input
-  type weights
-  type output
-  type error_in
-  type error_out
-  type gradients
-
-  type act
-  type layer
-  type input_params
-
-  -- val forward: act -> weights -> input -> output
-  -- val backward:  act -> bool ->  weights ->  input -> error_in -> gradients
-  val layer: input_params -> (act, act) -> layer
-
-  -- val get_ws: layer -> weights
-  -- val get_f: layer -> weights -> input -> (input, output)
-  -- val get_b: layer -> bool -> weights ->  input -> error_in -> gradients
-}
+import "../util"
 
 module dense (R:real) : layer with t = R.t
                               with input = [][]R.t
@@ -75,7 +52,7 @@ module dense (R:real) : layer with t = R.t
       let (res_m, res_n) = (length res, length res[0])
       let deriv          = unflatten res_m res_n (act (flatten res))
       let delta          = util.multMatrix error deriv
-      let w_grad           = lalg.matmul delta (input)
+      let w_grad         = lalg.matmul delta (input)
       let b_grad         = transpose [map (R.sum) delta]
       let error'         = lalg.matmul (transpose w) delta
       in (error', (w_grad, b_grad))
@@ -102,36 +79,4 @@ module dense (R:real) : layer with t = R.t
   let get_f (nn:layer) = nn.1
   let get_b (nn:layer) = nn.2
   let get_ws (nn:layer): weights = nn.4
-}
-
-
-module layers (R:real) :{
-
-  type t = R.t
-  type dense_tp = NN ([][]t) ([][]t, [][]t) ([][]t) ([][]t) ([][]t) ([][]t) t
-  module dense : layer with t = R.t
-                       with input = [][]R.t
-                       with weights = ([][]R.t, [][]R.t)
-                       with output = [][]R.t
-                       with error_in = ([][]R.t)
-                       with error_out = ([][]R.t)
-                       with gradients = ([][]R.t, ([][]R.t, [][]R.t))
-                       with act = ([]R.t -> []R.t)
-                       with layer = dense_tp
-
-   val Dense: (i32, i32) -> (dense.act, dense.act) -> dense.layer
-
-} = {
-
-  type t = R.t
-  type dense_tp = NN ([][]t) ([][]t, [][]t) ([][]t) ([][]t) ([][]t) ([][]t) t
-  module dense = dense R
-
-
-  let Dense ((m,n):(i32,i32)) (act_id: (dense.act, dense.act))  =
-      dense.layer (m,n) act_id
-
-  -- type act_pair_1d = i32
-  -- type dense = NN
-
 }

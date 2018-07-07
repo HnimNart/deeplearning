@@ -1,5 +1,5 @@
 import "types"
-import "layers"
+import "layers/layers"
 import "activations"
 import "classifications"
 
@@ -10,15 +10,13 @@ module network (R:real) : {
 
   val combine 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22 : NN i1 w1 o1 g1 e22 e1 t -> NN o1 w2 o2 g2 e2 e22 t -> NN i1 (w1, w2) (o2) (g1,g2) (e2) (e1) t
   val predict 'w 'g 'i 'e1 'e2 : NN ([]i) (w) ([][]t) (g) e1 e2 t -> []i -> [][]t
-  val accuracy 'w 'g 'e2  :NN ([][]t) w ([][]t) g ([][]t) e2 t -> [][]t -> [][]t -> t
+  val accuracy 'w 'g 'e2 'i :NN ([]i) w ([][]t) g ([][]t) e2 t -> []i -> [][]t -> t
 
 } = {
 
   type t = R.t
 
-  type dense_tp = NN ([][]t) ([][]t, [][]t) ([][]t) ([][]t) ([][]t) ([][]t) t
 
-  module dense = dense R
   module clas = classification R
 
 
@@ -47,7 +45,8 @@ module network (R:real) : {
     let labels_i:i32 = (reduce (\n i -> if unsafe (R.(labels[n] > labels[i])) then n else i) 0 (iota n))
     in if logits_i == labels_i  then 1 else 0
 
-  let accuracy [d][c] 'w 'g 'e2 'u (nn:NN ([][]t) w ([][]t) g ([][]t) e2 u) (input:[d][]t) (labels:[d][c]t) : t=
+
+  let accuracy [d][c] 'w 'g 'e2 'u 'i (nn:NN ([]i) w ([][]t) g ([][]t) e2 u) (input:[d]i) (labels:[d][c]t) : t=
     let predictions = (predict nn input)
     let labels_T    = (labels)
     let hits        = map2 (\x y -> is_equal x y) predictions labels_T
