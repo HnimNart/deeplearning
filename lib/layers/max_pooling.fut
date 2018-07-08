@@ -14,7 +14,8 @@ module max_pooling_2d (R:real) : layer with t = R.t
                                        with error_in = ([][][]R.t)
                                        with error_out = ([][][]R.t)
                                        with gradients = ([][][]R.t,())
-                                       with layer = NN ([][][]R.t) () ([][][]R.t) ([][][](i32, i32)) ([][][]R.t) ([][][]R.t) R.t with act = ()  =  {
+                                       with layer = NN ([][][]R.t) () ([][][]R.t) ([][][](i32, i32)) ([][][]R.t) ([][][]R.t) R.t
+                                       with act = ()  =  {
 
   type t = R.t
   type input = [][][]t
