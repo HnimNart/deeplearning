@@ -6,25 +6,26 @@ import "../util"
 
 
 module conv2d (R:real) : layer with t = R.t
-                               with input = [][][]R.t
+                               with input = [][][][]R.t
                                with input_params = (i32,i32, i32)
                                with weights = ([][]R.t, []R.t)
-                               with output  = ([][][]R.t)
-                               with error_in = ([][][]R.t)
-                               with error_out = ([][][]R.t)
-                               with gradients = ([][][]R.t ,([][]R.t, []R.t))
-                               with layer = NN ([][][]R.t) ([][]R.t,[]R.t) ([][][]R.t) ([][][]R.t) ([][][]R.t) ([][][]R.t) (R.t)
+                               with output  = ([][][][]R.t)
+                               with error_in = ([][][][]R.t)
+                               with error_out = ([][][][]R.t)
+                               with gradients = ([][][][]R.t ,([][]R.t, []R.t))
+                               with layer = NN ([][][][]R.t) ([][]R.t,[]R.t) ([][][][]R.t) ([][][][]R.t) ([][][][]R.t) ([][][][]R.t) (R.t)
+
 
                                with act = ([]R.t -> []R.t) = {
 
 
   type t = R.t
-  type input = [][][]t
+  type input = [][][][]t
   type weights  = ([][]t, []t)
-  type output = [][][]t
-  type garbage  = [][][]t
-  type error_in = [][][]t
-  type error_out = [][][]t
+  type output = [][][][]t
+  type garbage  = [][][][]t
+  type error_in = [][][][]t
+  type error_out = [][][][]t
   type gradients = (error_out, weights)
   type input_params = (i32 ,i32, i32)
 
@@ -70,12 +71,12 @@ module conv2d (R:real) : layer with t = R.t
 
   let forward (act:act) ((w_m, w_n):(i32, i32)) (stride:i32) ((w,b):weights) (input:input) : output =
     --- Maybe add padding here ---
-    let (x_m, x_n)      = (length input[0], length input[0,0])
+    let (x_m, x_n)      = (length input[0,0], length input[0,0,0])
     let (out_m, out_n)  = (((x_m - w_m)/ stride) + 1, ((x_n - w_n)/stride) + 1 )
-    let res             = convolution input w stride (w_m, w_n) (out_m, out_n)
-    let res_bias = map2 (\b' res' -> map (\x -> R.(x + b')) res') b res
-    let res_act  = map (\x -> act x) res_bias
-    in map (\x -> unflatten out_m out_n x) res_act
+    let res             = map (\x -> convolution x w stride (w_m, w_n) (out_m, out_n)) input
+    let res_bias        = map (\res' ->  map2 (\b' r -> map (\x -> R.(x + b')) r) b res') res
+    let res_act         = map (\x' -> map (\x -> act x) x') res_bias
+    in map (\inp -> map (\x -> unflatten out_m out_n x) inp) res_act
 
 
   let backward (act:act) (k:i32) (stride:i32) (l_layer:bool) ((w,b): weights) (input:input) (error:error_in) : gradients =
@@ -83,29 +84,31 @@ module conv2d (R:real) : layer with t = R.t
       (error, (w,b))
     else
 
-  let (x_m, x_n)      = (length input[0], length input[0,0])
+  let (x_m, x_n)      = (length input[0,0], length input[0,0,0])
   let (out_m, out_n)  = (((x_m - k)/ stride) + 1, ((x_n - k)/stride) + 1 )
-  let (err_m, err_n) = (length error[0], length error[0,0])
+  let (err_m, err_n) = (length error[0,0], length error[0,0, 0])
 
-  let res  = convolution input w  1 (k,k) (out_m,out_n)
-  let res_deriv = map (\x -> act x) res
-  let error_flat = map (\x -> flatten x) error
-  let delta = map2 (\x y -> map2 (\x' y' -> R.(x' * y')) x y) error_flat res_deriv
-  -- let delta_flipped = map (\x -> reverse x) delta
-  let grad_w = convolution input delta 1 (err_m, err_n) (k,k)
-  let grad_b = map (\x -> R.sum x) delta
+  let res  = map (\x -> convolution x w 1 (k,k) (out_m,out_n)) input
+  let res_deriv = map (\inpt -> map (\x -> act x) inpt) res
 
-  -- Calcluate error for previous layer
+  let error_flat = map (\input' -> map (\x -> flatten x) input') error
+  let delta = map2 (\e_inp res_inp -> map2 (\x y -> map2 (\x' y' -> R.(x' * y')) x y) e_inp res_inp) error_flat res_deriv
+
+  let grad_w_all = map2 (\input' delta' -> convolution input' delta' stride (err_m, err_n) (k,k)) input delta
+  let grad_w     = if length grad_w_all == 1 then grad_w_all[0] else reduce (add_2d_matrix) grad_w_all[0] grad_w_all[:1]
+  let grad_b_all = map (\delta' ->  map (\x -> R.sum x) delta' ) delta
+  let grad_b     = if length grad_b_all == 1 then grad_b_all[0] else map (R.sum) (transpose grad_b_all)
+
+  -- -- Calcluate error for previous layer
   let w_flipped       = map (\x -> reverse x) w
-  let delta_unflatten = map (\x -> unflatten err_m err_n x) delta
-  let error_pad       = map (\x -> add_padding (k-1) x) delta_unflatten
-  let error           = convolution error_pad w_flipped 1 (k,k) (x_m,x_n)
-  let error_sum       = unflatten x_m x_n (map (R.sum) (transpose (map (map R.((/i32 1))) error)))
-  -- let error_unflat    = map (\x -> unflatten x_m x_n x) error
-  -- let error_reduce    = unflatten x_m x_n (map (R.sum)  (transpose error))
-  let error' = replicate (length input) error_sum
+  let delta_unflatten = map (\d -> map (\x -> unflatten err_m err_n x) d) delta
+  let error_pad       = map (\d -> map (\x -> add_padding (k-1) x) d) delta_unflatten
+  let error           = map (\d -> convolution d w_flipped 1 (k,k) (x_m,x_n)) error_pad
+  let error_sum       = map (\x -> unflatten x_m x_n (map (R.sum) (transpose (map (map R.((/i32 1))) x)))) error
+  let error' = map (\x -> replicate (length input)  x )error_sum
 
-       in (error', (grad_w,grad_b))
+   in (error' , (grad_w, grad_b))
+       -- in (error', (grad_w,grad_b))
 
 
 
@@ -118,7 +121,7 @@ module conv2d (R:real) : layer with t = R.t
     in (w',b')
 
   let layer  ((filters, kernel, stride):input_params)  (act:(act,act))   =
-    let w: [][]t  = (random.gen_random_array_2d ( (kernel* kernel), filters) 3)
+    let w: [][]t  = (random.gen_random_array_2d ( (kernel* kernel), filters) 1)
     let b: []t    = map (\_ -> R.(i32 0)) (0..<filters)
    in
     (\w input -> (input, forward act.1 (kernel,kernel) stride w input),

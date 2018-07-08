@@ -9,16 +9,16 @@ import "../lib/layers/reshape"
 import "../lib/loss"
 import "/futlib/linalg"
 
-module tf = network f64
-module layers = layers f64
-module act = activations f64
-module sgd = sgd f64
-module conv2d = conv2d f64
-module max = max_pooling_2d f64
-module flat = flatten f64
-module loss = loss f64
-module class = classification f64
-module lalg = linalg f64
+module tf = network f32
+module layers = layers f32
+module act = activations f32
+module sgd = sgd f32
+module conv2d = conv2d f32
+module max = max_pooling_2d f32
+module flat = flatten f32
+module loss = loss f32
+module class = classification f32
+module lalg = linalg f32
 
 
 let conv1 = conv2d.layer (32, 5, 1) act.Relu_1d
@@ -36,27 +36,30 @@ let nn4 = tf.combine nn3 flat2
 let nn5 = tf.combine nn4 dense
 let nn = tf.combine nn5 output
 
-let get_dims (X:[][][]f64) =
+let get_dims (X:[][][]f32) =
   (length X, length X[0], length X[0,0])
 
 let main [m][d][n] (input: [m][d]tf.t) (labels: [m][n]tf.t) =
   let i = 0
-  let n = 64000
+  let n = 10
+  let batch_size = 4
+  let tmp = map (\img -> [unflatten 28 28 img]) input[:n]
+
   let (nnf,nnb, nnu,w) = nn
   let (w', _) = loop (w, i) while i < n - 1 do
-    let input' = [unflatten 28 28 input[i]]
-    let label' = labels[i:i+1]
+    let input' = tmp[i:i+batch_size]
+    let label' = labels[i:i+batch_size]
     let (os,out) = nnf w input'
     let error = loss.softmax_cross_entropy_with_logits label' out
     let (_, g) = nnb true w os error
     let w' = nnu 0.001 w g
     in (w', i + 1)
-
-  let acc: f64 = 0
-  let i = i
-  let (acc',_) = loop (acc, i) while i < n -1  do
-                 let input' = [unflatten 28 28 input[i]]
-                 let label' = labels[i:i+1]
-                 let acc = acc + tf.accuracy (nnf, nnb, nnu, w') input' label'
-                 in (acc, i+ 1)
-  in acc'/f64.(i32 n)
+in w'
+  -- let acc: f32 = 0
+  -- let i = i
+  -- let (acc',_) = loop (acc, i) while i < n -1  do
+  --                let input' = [unflatten 28 28 input[i]]
+  --                let label' = labels[i:i+1]
+  --                let acc = acc + tf.accuracy (nnf, nnb, nnu, w') [input'] label'
+  --                in (acc, i+ 1)
+  -- in acc'/f32.(i32 n)
