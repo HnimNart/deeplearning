@@ -48,12 +48,12 @@ module conv2d (R:real) : layer with t = R.t
     in flatten (map (\i -> map (\j -> (i,j) ) row_index) col_index)
 
   let add_padding (padding:i32) (X:[][]t) : [][]t =
-    let width = length X + padding*2
-    let height = length X[0] + padding *2
-    let total_elem = width * height
-    let index =  (flatten (map (\i -> (map (\j -> (i,j)) (0..<length X))) (0..<length X[0])))
-    let offsets = map (\(i,j) -> padding*width + padding + width * i + j) index
-    let retval = scatter (map (\_ -> R.(i32 0)) (0..<total_elem)) (offsets) (flatten X)
+    let height   = length X    + padding * 2
+    let width    = length X[0] + padding * 2
+    let tot_elem = width * height
+    let index    = (flatten (map (\i -> (map (\j -> (i,j)) (0..<length X))) (0..<length X[0])))
+    let offsets  = map (\(i,j) -> padding*width + padding + width * i + j) index
+    let retval   = scatter (map (\_ -> R.(i32 0)) (0..<tot_elem)) (offsets) (flatten X)
     in unflatten height width retval
 
   -- Convert 2d slices into a coulmn for matrix multiplication

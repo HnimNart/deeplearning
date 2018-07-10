@@ -1,6 +1,6 @@
 type forwards 'input 'w 'output 'garbage  = w -> input -> (garbage, output) --- NN
 type backwards 'g 'w  'err1  'err2  = w -> g ->  err1  -> (err2, w)
-type update 'w '^f = f ->  w -> w -> w
+type update 'w '^f = f -> w -> w -> w
 
 type updater 'w = w -> w -> w
 

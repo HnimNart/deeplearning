@@ -47,9 +47,7 @@ module dense (R:real) : layer with t = R.t
     let deriv            = unflatten res_m res_n (act (flatten res_bias))
     let delta            = util.mult_matrix error deriv
     let w_grad           = lalg.matmul delta (input)
-    let w_grad           = map (map R.((/i32 (length input)))) w_grad
     let b_grad           = map (R.sum) delta
-    let b_grad           = map (R.((/i32 (length input)))) b_grad
     let error'           = lalg.matmul (transpose w) delta
     in (error', (w_grad, b_grad))
 

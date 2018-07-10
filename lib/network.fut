@@ -3,15 +3,17 @@ import "layers/layers"
 import "activations"
 
 
+
 module type network = {
 
   type t
   type ^updater
 
   val connect_layers 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22 : NN i1 w1 o1 g1 e22 e1 updater -> NN o1 w2 o2 g2 e2 e22 updater -> NN i1 (w1, w2) (o2) (g1,g2) (e2) (e1) updater
-  val predict 'w 'g 'i 'e1 'e2 '^u : NN ([]i) (w) ([][]t) (g) e1 e2 u -> []i -> ([][]t -> [][]t) ->  [][]t
-  val accuracy 'w 'g 'e2 'i '^u :NN ([]i) w ([][]t) g ([][]t) e2 u -> []i -> [][]t -> ([][]t -> [][]t) -> t
-
+  val predict 'w 'g 'i 'e1 'e2 '^u 'o  : NN ([]i) (w) ([]o) g e1 e2 u -> []i -> ([]o -> []o)   ->  []o
+  val accuracy 'w 'g 'e1 'e2 'i '^u 'o  :NN ([]i)  w  ([]o) g e1 e2 u ->   []i -> []o -> ([]o -> []o) -> (o -> i32) -> t
+  val argmax : []t -> i32
+  val argmin : []t -> i32
 }
 
 
@@ -39,22 +41,24 @@ module neural_network (R:real): network  with t = R.t
      (ws1, ws2))
 
 
-  let predict  'i 'w 'g 'e1 'e2 'u ((f,_, _ ,w):NN ([]i) w ([][]t) g e1 e2 u) (input:[]i) (classification:[][]t -> [][]t)  =
+  let predict  'i 'w 'g 'e1 'e2 'u 'o  ((f,_, _ ,w):NN ([]i) w ([]o) g e1 e2 u) (input:[]i) (classification:[]o -> []o)  =
     let (_, output) = f w input
     in classification output
 
-  let is_equal [n] (logits:[n]t) (labels:[n]t) =
-    let logits_i:i32 = (reduce (\n i -> if unsafe (R.(logits[n] > logits[i])) then n else i) 0 (iota n))
-    let labels_i:i32 = (reduce (\n i -> if unsafe (R.(labels[n] > labels[i])) then n else i) 0 (iota n))
-    in if logits_i == labels_i  then 1 else 0
-
-
-  let accuracy [d][c] 'w 'g 'e2 'u 'i (nn:NN ([]i) w ([][]t) g ([][]t) e2 u) (input:[d]i) (labels:[d][c]t) (classification:[][]t -> [][]t) : t=
-    let predictions = (predict nn input classification)
-    let labels_T    = (labels)
-    let hits        = map2 (\x y -> is_equal x y) predictions labels_T
-    let total       = reduce (+) 0 hits
+  let accuracy [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([]i) w ([]o) g e1 e2 u) (input:[d]i) (labels:[d]o)
+                                               (classification:[]o -> []o) (tmp: o -> i32)  : t =
+    let predictions          = predict nn input classification
+    let argmax_labels        = map (\x -> tmp x) labels
+    let argmax_predictions   = map (\x -> tmp x) predictions
+    let total                = reduce (+) 0 (map2 (\x y -> if x == y then 1 else 0) argmax_labels argmax_predictions)
     in R.(i32 total / i32 d)
+
+  let argmax [n] (X:[n]t) : i32 =
+    reduce (\n i -> if unsafe R.(X[n] > X[i]) then n else i) 0 (iota n)
+
+  let argmin [n] (X:[n]t) : i32 =
+    reduce (\n i -> if unsafe R.(X[n] > X[i]) then n else i) 0 (iota n)
+
 
   -- let get_f (nn:layer) = nn.1
   -- let get_b (nn:layer) = nn.2

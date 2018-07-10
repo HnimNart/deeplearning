@@ -48,7 +48,6 @@ module normal_random_array (R:real) : random_generator
   let gen_random_array_3d ((m,n,p):(i32, i32, i32)) (seed:i32) : [][][]t =
     map (\i -> gen_random_array_2d (m,n) (seed+i)) (0..<p)
 
-
 }
 
 module utility (R:real) : {
@@ -106,6 +105,6 @@ module utility (R:real) : {
     let X_flat = flatten X
     let index = map (\x -> x * len + x) (0..<len)
     let retval = map (\i -> X_flat[i] ) (index)
-     in retval
+    in retval
 
 }
