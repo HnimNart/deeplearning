@@ -12,7 +12,7 @@ module dense (R:real) : layer with t = R.t
                               with error_in = ([][]R.t)
                               with error_out = ([][]R.t)
                               with gradients = ([][]R.t ,([][]R.t, []R.t))
-                              with layer = NN ([][]R.t) ([][]R.t,[]R.t) ([][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) (R.t)
+                              with layer = NN ([][]R.t) ([][]R.t,[]R.t) ([][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) (updater ([][]R.t, []R.t))
                               with act = ([]R.t -> []R.t) = {
 
   type t = R.t
@@ -26,7 +26,7 @@ module dense (R:real) : layer with t = R.t
   type input_params = (i32, i32)
 
   type act = []t -> []t
-  type layer = NN input weights output garbage error_in error_out t
+  type layer = NN input weights output garbage error_in error_out (updater weights)
 
   module lalg   = linalg R
   module util   = utility R
@@ -53,12 +53,8 @@ module dense (R:real) : layer with t = R.t
     let error'           = lalg.matmul (transpose w) delta
     in (error', (w_grad, b_grad))
 
-  let update (alpha:t) ((w,b): weights) ((wg,bg):weights)  =
-    let bg_scaled        = map (\x -> R.(x * alpha)) bg
-    let wg_scaled        = util.scale_matrix wg alpha
-    let w'               = util.sub_matrix w wg_scaled
-    let b'               = map2 (\x y -> R.(x - y)) b bg_scaled
-    in (w', b')
+  let update (f:updater weights) (w: weights) (wg:weights)  =
+    f w wg
 
   let init ((m,n):input_params) (act_id: (act, act)) (seed:i32)  =
     let w = random.gen_random_array_2d_w_scaling (m,n) seed
@@ -70,6 +66,3 @@ module dense (R:real) : layer with t = R.t
       (w,b))
 
 }
-
-
-    -- let wg'  = map (\xr -> map (\x -> R.(if x > i32 1 then i32 1 else if x < (negate (i32 1)) then (negate (i32 1)) else x)) xr ) wg

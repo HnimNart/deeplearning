@@ -4,7 +4,6 @@ import "../activations"
 import "/futlib/linalg"
 import "../util"
 
-
 module conv2d (R:real) : layer with t = R.t
                                with input = [][][][]R.t
                                with input_params = (i32,i32, i32)
@@ -13,9 +12,7 @@ module conv2d (R:real) : layer with t = R.t
                                with error_in = ([][][][]R.t)
                                with error_out = ([][][][]R.t)
                                with gradients = ([][][][]R.t ,([][]R.t, []R.t))
-                               with layer = NN ([][][][]R.t) ([][]R.t,[]R.t) ([][][][]R.t) ([][][][]R.t) ([][][][]R.t) ([][][][]R.t) (R.t)
-
-
+                               with layer = NN ([][][][]R.t) ([][]R.t,[]R.t) ([][][][]R.t) ([][][][]R.t) ([][][][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
                                with act = ([]R.t -> []R.t) = {
 
 
@@ -30,12 +27,11 @@ module conv2d (R:real) : layer with t = R.t
   type input_params = (i32 ,i32, i32)
 
   type act = []t -> []t
-  type layer = NN input weights output garbage error_in error_out t
+  type layer = NN input weights output garbage error_in error_out (updater weights)
 
   module lalg   = linalg R
   module util   = utility R
   module random = normal_random_array R
-
 
   let flip_matrix (X:[][]t) =
     reverse (map (\x -> reverse x) X)
@@ -46,6 +42,11 @@ module conv2d (R:real) : layer with t = R.t
   let add_2d_matrix (X:[][]t) (Y:[][]t) =
     map2 (\xr yr -> map2 (\x y -> R.(x +  y)) xr yr) X Y
 
+  let calc_index (stride:i32) ((m,n):(i32, i32)) =
+    let row_index = map (\i -> i * stride) (0..<m)
+    let col_index = map (\i -> i * stride) (0..<n)
+    in flatten (map (\i -> map (\j -> (i,j) ) row_index) col_index)
+
   let add_padding (padding:i32) (X:[][]t) : [][]t =
     let width = length X + padding*2
     let height = length X[0] + padding *2
@@ -54,11 +55,6 @@ module conv2d (R:real) : layer with t = R.t
     let offsets = map (\(i,j) -> padding*width + padding + width * i + j) index
     let retval = scatter (map (\_ -> R.(i32 0)) (0..<total_elem)) (offsets) (flatten X)
     in unflatten height width retval
-
-  let calc_index (stride:i32) ((m,n):(i32, i32)) =
-    let row_index = map (\i -> i * stride) (0..<m)
-    let col_index = map (\i -> i * stride) (0..<n)
-    in flatten (map (\i -> map (\j -> (i,j) ) row_index) col_index)
 
   -- Convert 2d slices into a coulmn for matrix multiplication
   let im2col (X:[][]t) ((w_m, w_n):(i32, i32)) (idx:[](i32, i32))  =
@@ -85,21 +81,19 @@ module conv2d (R:real) : layer with t = R.t
       let (out_m, out_n)  = (((x_m - k)/ stride) + 1, ((x_n - k)/stride) + 1 )
       let (err_m, err_n)  = (length error[0,0], length error[0,0, 0])
 
-      let idx        = calc_index stride (out_m, out_n)
-      let input_col  = map (\image -> map (\x -> im2col x (k,k) idx) image) input
-      let res        = map (\x -> convolution x w ) input_col
-      let res_deriv  = map (\inpt -> map (\x -> act x) inpt) res
+      let idx         = calc_index stride (out_m, out_n)
+      let input_col   = map (\image -> map (\x -> im2col x (k,k) idx) image) input
+      let res         = map (\x -> convolution x w ) input_col
+      let res_deriv   = map (\inpt -> map (\x -> act x) inpt) res
 
-      let error_flat = map (\input' -> map (\x -> flatten x) input') error
-      let delta = map2 (\e_inp res_inp -> map2 (\x y -> map2 (\x' y' -> R.(x' * y')) x y) e_inp res_inp) error_flat res_deriv
+      let error_flat  = map (\input' -> map (\x -> flatten x) input') error
+      let delta       = map2 (\e_inp res_inp -> map2 (\x y -> map2 (\x' y' -> R.(x' * y')) x y) e_inp res_inp) error_flat res_deriv
 
       let input_col_T = map (\x -> map (\x' -> transpose x') x ) input_col
-      let grad_w_all = map2 (\input' delta' -> convolution input' delta') input_col_T delta
-      let grad_w     = if length grad_w_all == 1 then grad_w_all[0] else foldl (add_2d_matrix) grad_w_all[0] grad_w_all[:1]
-      let grad_w     = map (map R.((/i32 (length input)))) grad_w
-      let grad_b_all = map (\delta' ->  map (\x -> R.sum x) delta' ) delta
-      let grad_b     = if length grad_b_all == 1 then grad_b_all[0] else map (R.sum) (transpose grad_b_all)
-      let grad_b     = map (R.((/i32 (length input)))) grad_b
+      let grad_w_all  = map2 (\input' delta' -> convolution input' delta') input_col_T delta
+      let grad_w      = if length grad_w_all == 1 then grad_w_all[0] else foldl (add_2d_matrix) grad_w_all[0] grad_w_all[:1]
+      let grad_b_all  = map (\delta' ->  map (\x -> R.sum x) delta') delta
+      let grad_b      = if length grad_b_all == 1 then grad_b_all[0] else map (R.sum) (transpose grad_b_all)
 
       -- Calcluate error for previous layer
       let w_flipped       = map (\x -> reverse x) w
@@ -112,12 +106,8 @@ module conv2d (R:real) : layer with t = R.t
       let error'          = map (\x -> replicate (length input[0]) x) error_sum
       in (error' , (grad_w, grad_b))
 
-  let update (alpha:t) ((w,b):weights) ((wg,bg):weights) =
-    let wg_scaled = map (\x -> map (\y -> R.((alpha) * y)) x) wg
-    let bg_scaled = map (\x -> R.((alpha) * x)) bg
-    let w'        = map2 (\xr yr -> map2 (\x y -> R.(x - y)) xr yr) w wg_scaled
-    let b'        = map2 (\x y -> R.(x -y)) b bg_scaled
-    in (w',b')
+  let update (f:updater weights) (w:weights) (wg:weights) =
+    f w wg
 
   let init ((filters, kernel, stride):input_params)  (act:(act,act))  (seed: i32)  =
     let w: [][]t  = (random.gen_random_array_2d_w_scaling_conv ( (kernel* kernel), filters) seed)

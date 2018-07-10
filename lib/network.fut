@@ -6,20 +6,25 @@ import "activations"
 module type network = {
 
   type t
+  type ^updater
 
-  val connect_layers 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22 : NN i1 w1 o1 g1 e22 e1 t -> NN o1 w2 o2 g2 e2 e22 t -> NN i1 (w1, w2) (o2) (g1,g2) (e2) (e1) t
-  val predict 'w 'g 'i 'e1 'e2 : NN ([]i) (w) ([][]t) (g) e1 e2 t -> []i -> ([][]t -> [][]t) ->  [][]t
-  val accuracy 'w 'g 'e2 'i :NN ([]i) w ([][]t) g ([][]t) e2 t -> []i -> [][]t -> ([][]t -> [][]t) -> t
+  val connect_layers 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22 : NN i1 w1 o1 g1 e22 e1 updater -> NN o1 w2 o2 g2 e2 e22 updater -> NN i1 (w1, w2) (o2) (g1,g2) (e2) (e1) updater
+  val predict 'w 'g 'i 'e1 'e2 '^u : NN ([]i) (w) ([][]t) (g) e1 e2 u -> []i -> ([][]t -> [][]t) ->  [][]t
+  val accuracy 'w 'g 'e2 'i '^u :NN ([]i) w ([][]t) g ([][]t) e2 u -> []i -> [][]t -> ([][]t -> [][]t) -> t
 
 }
 
 
-module neural_network (R:real): network  with t = R.t = {
+module neural_network (R:real): network  with t = R.t
+                                         with updater = updater ([][]R.t, []R.t)= {
 
   type t = R.t
+  type updater = updater ([][]R.t, []R.t)
 
-  let connect_layers 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22  ((f1, b1, u1,ws1): NN i1 w1 o1 g1 e22 e1 t) ((f2, b2, u2,ws2):NN o1 w2 o2 g2 e2 e22 t)
-                                                                                    : NN i1 (w1,w2) (o2) (g1,g2) (e2) (e1) (t) =
+  let connect_layers 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22  ((f1, b1, u1,ws1): NN i1 w1 o1 g1 e22 e1 updater)
+                                                               ((f2, b2, u2,ws2): NN o1 w2 o2 g2 e2 e22 updater)
+                                                               : NN i1 (w1,w2) (o2) (g1,g2) (e2) (e1) (updater) =
+
     ((\(w1, w2) (input) ->  let (g1, res)  = f1 w1 input
                             let (g2, res2) = f2 w2 res
                             in ((g1, g2), res2)),
@@ -27,9 +32,9 @@ module neural_network (R:real): network  with t = R.t = {
                             let (err2, w2') = b2 w2 g2 error
                             let (err1, w1') = b1 w1 g1 err2
                             in (err1, (w1', w2'))),
-     (\ (alpha) (w1, w2) (wg1, wg2)  ->
-                            let w1' = u1 alpha w1 wg1
-                            let w2' = u2 alpha w2 wg2
+     (\(f) (w1, w2) (wg1, wg2)  ->
+                            let w1' = u1 f w1 wg1
+                            let w2' = u2 f w2 wg2
                             in (w1', w2')),
      (ws1, ws2))
 

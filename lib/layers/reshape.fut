@@ -13,7 +13,7 @@ module flatten (R:real) : layer with t = R.t
                                 with error_in = ([][]R.t)
                                 with error_out = ([][][][]R.t)
                                 with gradients = ([][][][]R.t, ())
-                                with layer = NN ([][][][]R.t) () ([][]R.t) ([][][][]R.t) ([][]R.t) ([][][][]R.t) R.t
+                                with layer = NN ([][][][]R.t) () ([][]R.t) ([][][][]R.t) ([][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
                                 with act = () = {
 
 
@@ -28,10 +28,9 @@ module flatten (R:real) : layer with t = R.t
   type input_params = ()
   type act = ()
 
-  type layer = NN input weights output garbage error_in error_out t
+  type layer = NN input weights output garbage error_in error_out (updater ([][]t, []t))
 
-
-   let forward (_:weights) (input:input) : output =
+  let forward (_:weights) (input:input) : output =
      map (\image -> flatten_3d image) input
 
   let backward (_: weights) (input:input) (error:error_in) : gradients =
@@ -39,7 +38,7 @@ module flatten (R:real) : layer with t = R.t
     let err_flat = intrinsics.flatten (transpose error)
     in (unflatten_4d q p m n err_flat, ())
 
-  let update (_:t) (_:weights) (_:weights)  = ()
+  let update (_:updater ([][]R.t, []R.t)) (_:weights) (_:weights)  = ()
 
   let init () ((),()) (_:i32) =
     (\w input -> (input, forward w input),

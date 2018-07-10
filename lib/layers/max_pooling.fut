@@ -14,7 +14,7 @@ module max_pooling_2d (R:real) : layer with t = R.t
                                        with error_in = ([][][][]R.t)
                                        with error_out = ([][][][]R.t)
                                        with gradients = ([][][][]R.t,())
-                                       with layer = NN ([][][][]R.t) () ([][][][]R.t) ([][][][](i32, i32)) ([][][][]R.t) ([][][][]R.t) R.t
+                                       with layer = NN ([][][][]R.t) () ([][][][]R.t) ([][][][](i32, i32)) ([][][][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
                                        with act = ()  =  {
 
   type t = R.t
@@ -28,7 +28,7 @@ module max_pooling_2d (R:real) : layer with t = R.t
   type input_params = (i32, i32)
 
   type act = ()
-  type layer = NN input weights output garbage error_in error_out t
+  type layer = NN input weights output garbage error_in error_out (updater ([][]t, []t))
 
   let max_val  [m][n] (input:[m][n]t) =
     let inp_flat = flatten input
@@ -61,8 +61,7 @@ module max_pooling_2d (R:real) : layer with t = R.t
     let error'     = map2 (\offsets' errors' -> map2 (\o e -> scatter  (copy retval) o  e) offsets' errors') offsets error_flat
     in (map (\image -> map (\x -> unflatten height width x) image) error', ())
 
-  let update (_:t) (_:weights) (_:weights) = ()
-
+  let update (_:updater ([][]t, []t)) (_:weights) (_:weights) = ()
 
   let init ((m,n):(i32, i32)) (((),())) (_: i32) =
     (\w input -> forward (m,n) w input,
