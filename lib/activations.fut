@@ -20,7 +20,7 @@ module type activations = {
 
 }
 
-module activations_funcs (R:real) : activations with t = R.t
+module activation_funcs (R:real) : activations with t = R.t
                                                 with act_pair_1d = ([]R.t -> []R.t, []R.t -> []R.t)
                                                 with act_pair_2d = ([][]R.t -> [][]R.t, [][]R.t -> [][]R.t)
                                                 = {
@@ -97,7 +97,6 @@ module activations_funcs (R:real) : activations with t = R.t
 
   let softmax_2d_stable' (X:[][]t) =
     map (\x -> softmax_1d_stable' x) X
-
 
 
 

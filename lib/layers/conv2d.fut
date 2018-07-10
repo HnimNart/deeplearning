@@ -1,4 +1,4 @@
-import "../types"
+import "../nn_types"
 import "layer_type"
 import "../activations"
 import "/futlib/linalg"
@@ -80,7 +80,7 @@ module conv2d (R:real) : layer with t = R.t
     let res_act         = map (\x' -> map (\x -> act x) x') res_bias
     in map (\inp -> map (\x -> unflatten out_m out_n x) inp) res_act
 
-  let backward (act:act) (k:i32) (stride:i32) ((w,b): weights) (input:input) (error:error_in) : gradients =
+  let backward (act:act) (k:i32) (stride:i32) ((w,_): weights) (input:input) (error:error_in) : gradients =
       let (x_m, x_n)      = (length input[0,0], length input[0,0,0])
       let (out_m, out_n)  = (((x_m - k)/ stride) + 1, ((x_n - k)/stride) + 1 )
       let (err_m, err_n)  = (length error[0,0], length error[0,0, 0])
@@ -109,7 +109,6 @@ module conv2d (R:real) : layer with t = R.t
       let error_col       = map (\d -> map (\x -> im2col x (k,k) idx ) d) error_pad
       let error           = map (\d -> convolution d w_flipped ) error_col
       let error_sum       = map (\x -> unflatten x_m x_n (map (R.sum) (transpose x))) error
-      -- let error_sum       = map (\x -> unflatten x_m x_n (map (R.sum) (transpose (map (map R.((/i32 100))) x) ))) error
       let error'          = map (\x -> replicate (length input[0]) x) error_sum
       in (error' , (grad_w, grad_b))
 

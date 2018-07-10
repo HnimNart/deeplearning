@@ -1,4 +1,4 @@
-import "../types"
+import "../nn_types"
 import "layer_type"
 import "../activations"
 import "/futlib/linalg"
