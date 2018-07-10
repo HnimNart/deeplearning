@@ -1,9 +1,8 @@
-import "../types"
+import "../nn_types"
 import "layer_type"
 import "../activations"
 import "/futlib/linalg"
 import "../util"
-
 
 
 module flatten (R:real) : layer with t = R.t
@@ -35,14 +34,14 @@ module flatten (R:real) : layer with t = R.t
    let forward (_:weights) (input:input) : output =
      map (\image -> flatten_3d image) input
 
-  let backward (_:bool) (_: weights) (input:input) (error:error_in) : gradients =
+  let backward (_: weights) (input:input) (error:error_in) : gradients =
     let (m,n, p, q) = (length input[0,0], length input[0,0,0], length input[0], length input)
     let err_flat = intrinsics.flatten (transpose error)
     in (unflatten_4d q p m n err_flat, ())
 
   let update (_:t) (_:weights) (_:weights)  = ()
 
-  let layer () ((),()) =
+  let init () ((),()) (_:i32) =
     (\w input -> (input, forward w input),
      (backward ),
      update,
