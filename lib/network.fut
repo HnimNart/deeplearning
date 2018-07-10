@@ -12,13 +12,15 @@ module type network = {
   val connect_layers 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22 : NN i1 w1 o1 g1 e22 e1 updater -> NN o1 w2 o2 g2 e2 e22 updater -> NN i1 (w1, w2) (o2) (g1,g2) (e2) (e1) updater
   val predict 'w 'g 'i 'e1 'e2 '^u 'o  : NN ([]i) (w) ([]o) g e1 e2 u -> []i -> ([]o -> []o)   ->  []o
   val accuracy 'w 'g 'e1 'e2 'i '^u 'o  :NN ([]i)  w  ([]o) g e1 e2 u ->   []i -> []o -> ([]o -> []o) -> (o -> i32) -> t
+  val loss 'w 'g 'e1 'e2 '^u 'i 'o : NN ([]i) w ([]o) g e1 e2 u -> []i -> []o ->
+                                      (o -> o -> t) -> ([]o -> []o) -> t
   val argmax : []t -> i32
   val argmin : []t -> i32
 }
 
 
 module neural_network (R:real): network  with t = R.t
-                                         with updater = updater ([][]R.t, []R.t)= {
+                                         with updater = updater ([][]R.t, []R.t) = {
 
   type t = R.t
   type updater = updater ([][]R.t, []R.t)
@@ -46,12 +48,20 @@ module neural_network (R:real): network  with t = R.t
     in classification output
 
   let accuracy [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([]i) w ([]o) g e1 e2 u) (input:[d]i) (labels:[d]o)
-                                               (classification:[]o -> []o) (tmp: o -> i32)  : t =
+                                          (classification:[]o -> []o) (f: o -> i32)  : t =
     let predictions          = predict nn input classification
-    let argmax_labels        = map (\x -> tmp x) labels
-    let argmax_predictions   = map (\x -> tmp x) predictions
-    let total                = reduce (+) 0 (map2 (\x y -> if x == y then 1 else 0) argmax_labels argmax_predictions)
+    let argmax_labels        = map (\x -> f x) labels
+    let argmax_predictions   = map (\x -> f x) predictions
+    let total                = reduce (+) 0 (map2 (\x y ->
+                                                   if x == y then 1 else 0)
+                                             argmax_labels argmax_predictions)
     in R.(i32 total / i32 d)
+
+  let loss [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([]i) w ([]o) g e1 e2 u) (input:[d]i) (labels:[d]o)
+                                      (loss: o -> o -> t) (classification:[]o -> []o) =
+    let predictions = predict nn input (\x -> x)
+    let loss        = map2 (\p l -> loss p l) predictions labels
+    in reduce (R.+) R.(i32 0) loss
 
   let argmax [n] (X:[n]t) : i32 =
     reduce (\n i -> if unsafe R.(X[n] > X[i]) then n else i) 0 (iota n)
@@ -59,10 +69,8 @@ module neural_network (R:real): network  with t = R.t
   let argmin [n] (X:[n]t) : i32 =
     reduce (\n i -> if unsafe R.(X[n] > X[i]) then n else i) 0 (iota n)
 
-
   -- let get_f (nn:layer) = nn.1
   -- let get_b (nn:layer) = nn.2
   -- let get_ws (nn:layer): weights = nn.4
-
 
 }
