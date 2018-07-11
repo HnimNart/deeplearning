@@ -59,7 +59,7 @@ module neural_network (R:real): network  with t = R.t
 
   let loss [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([]i) w ([]o) g e1 e2 u) (input:[d]i) (labels:[d]o)
                                       (loss: o -> o -> t) (classification:[]o -> []o) =
-    let predictions = predict nn input (\x -> x)
+    let predictions = predict nn input classification
     let loss        = map2 (\p l -> loss p l) predictions labels
     in reduce (R.+) R.(i32 0) loss
 

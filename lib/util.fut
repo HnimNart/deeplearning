@@ -53,6 +53,7 @@ module normal_random_array (R:real) : random_generator
 module utility (R:real) : {
 
   type t = R.t
+  val mult_matrix_3d: [][][]t -> [][][]t -> [][][]t
 
   val mult_matrix: [][]t -> [][]t -> [][]t
   val sub_matrix:  [][]t -> [][]t -> [][]t
@@ -80,6 +81,9 @@ module utility (R:real) : {
     map2 (\x y -> R.(x - y)) x y
 
   -- Element wise
+  let mult_matrix_3d  [m][n][d] (X: [m][n][d]t) (Y:[m][n][d]t) : [m][n][d]t =
+    map2 (\X1 Y1 -> map2 (\xr yr -> map2 (\xc yc -> R.(xc * yc)) xr yr) X1 Y1) X Y
+
   let mult_matrix  [m][n] (X: [m][n]t) (Y:[m][n]t) : [m][n]t =
     map2 (\xr yr -> map2 (\xc yc -> R.(xc * yc)) xr yr) X Y
 
@@ -99,12 +103,11 @@ module utility (R:real) : {
     let retval = scatter (replicate elem R.(i32 0)) index X
    in unflatten len len retval
 
-
   let extract_diag (X:[][]t) =
     let len = length X
     let X_flat = flatten X
     let index = map (\x -> x * len + x) (0..<len)
-    let retval = map (\i -> X_flat[i] ) (index)
+    let retval = unsafe map (\i -> X_flat[i] ) (index)
     in retval
 
 }

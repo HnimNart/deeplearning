@@ -16,7 +16,7 @@ module type layers = {
   type ^act_1d
 
   val Dense: (i32, i32) -> act_1d -> i32 -> dense_tp
-  val Conv2d: (i32, i32, i32) -> act_1d -> i32 -> conv2d_tp
+  val Conv2d: (i32, i32, i32, i32) -> act_1d -> i32 -> conv2d_tp
   val Max_pooling2d: (i32, i32) -> max_pooling2d_tp
   val Flatten: flatten_tp
 
@@ -49,7 +49,7 @@ module layers_coll (R:real): layers
   let Dense ((m,n):(i32,i32)) (act_id: act_1d) (seed:i32)  =
       dense.init (m,n) act_id seed
 
-  let Conv2d (params:(i32, i32, i32)) (act:act_1d) (seed:i32) =
+  let Conv2d (params:(i32, i32, i32, i32)) (act:act_1d) (seed:i32) =
       conv2d.init params act seed
 
   let Flatten = flatten.init () ((),()) 0
