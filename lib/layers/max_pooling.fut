@@ -36,8 +36,9 @@ module max_pooling_2d (R:real) : layer with t = R.t
     let (i,j) = (argmax / n, argmax % n )
     in ( (i,j),  inp_flat[argmax])
 
+  let empty_garbage : garbage = [[[[]]]]
 
-  let forward ((m,n ):(i32, i32)) (_:weights) (input:input) : (garbage, output) =
+  let forward ((m,n ):(i32, i32)) (training:bool) (_:weights) (input:input) : (garbage, output) =
     let ixs = map (\x -> x * m) (0..<(length input[0,0, 0]/m)) -- should be divided by stride
     let jxs = map (\x -> x * n) (0..<(length input[0,0]/n))
     let res = unsafe map (\image ->
@@ -47,6 +48,7 @@ module max_pooling_2d (R:real) : layer with t = R.t
 
     let index = map (\image -> map (\x -> map (\y -> map (\(is, _) -> is) y) x) image) res
     let output = map (\image ->  map (\x -> map (\y -> map (\(_, r) -> r) y) x) image) res
+    let garbage = if training then index else empty_garbage
     in (index, output)
 
   let backward ((m,n): (i32, i32)) (_:weights) (input:garbage) (error:error_in) : gradients =
@@ -64,9 +66,9 @@ module max_pooling_2d (R:real) : layer with t = R.t
   let update (_:updater ([][]t, []t)) (_:weights) (_:weights) = ()
 
   let init ((m,n):(i32, i32)) (((),())) (_: i32) =
-    (\w input -> forward (m,n) w input,
+    (forward (m,n),
      backward (m,n),
      update,
-      (()))
+    (()))
 
 }

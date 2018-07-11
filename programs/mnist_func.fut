@@ -14,5 +14,8 @@ let main [m][n][d] (input: [m][d]tf.t) (labels: [m][n]tf.t) =
   let batch_size = 100
   let alpha = 0.01
   let nn1 = tf.train.GradientDescent nn alpha input labels batch_size tf.loss.Softmax_cross_entropy_with_logits_2d.2
-  in (tf.nn.loss nn input labels tf.loss.Softmax_cross_entropy_with_logits_1d.1 tf.activation.Softmax_2d.1 , tf.nn.loss nn1  input labels tf.loss.Softmax_cross_entropy_with_logits_1d.1 tf.activation.Softmax_2d.1 )
-   -- in tf.nn.accuracy nn (input) (labels) tf.activation.Softmax_2d.1 tf.nn.argmax
+   in tf.nn.accuracy nn1 (input) (labels) tf.activation.Softmax_2d.1 tf.nn.argmax
+
+
+
+  -- in (tf.nn.loss nn input labels tf.loss.Softmax_cross_entropy_with_logits_1d.1 tf.activation.Softmax_2d.1 , tf.nn.loss nn1  input labels tf.loss.Softmax_cross_entropy_with_logits_1d.1 tf.activation.Softmax_2d.1 )

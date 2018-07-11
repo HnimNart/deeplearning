@@ -30,8 +30,11 @@ module flatten (R:real) : layer with t = R.t
 
   type layer = NN input weights output garbage error_in error_out (updater ([][]t, []t))
 
-  let forward (_:weights) (input:input) : output =
-     map (\image -> flatten_3d image) input
+   let empty_garbage: garbage = [[[[]]]]
+
+  let forward (training: bool) (_:weights) (input:input) : (garbage, output) =
+     let garbage = if training then input else empty_garbage
+     in (garbage, map (\image -> flatten_3d image) input)
 
   let backward (_: weights) (input:input) (error:error_in) : gradients =
     let (m,n, p, q) = (length input[0,0], length input[0,0,0], length input[0], length input)
@@ -41,9 +44,9 @@ module flatten (R:real) : layer with t = R.t
   let update (_:updater ([][]R.t, []R.t)) (_:weights) (_:weights)  = ()
 
   let init () ((),()) (_:i32) =
-    (\w input -> (input, forward w input),
-     (backward ),
+    (forward,
+     backward ,
      update,
-      (()))
+     (()))
 
 }

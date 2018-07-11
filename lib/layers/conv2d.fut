@@ -33,11 +33,7 @@ module conv2d (R:real) : layer with t = R.t
   module util   = utility R
   module random = normal_random_array R
 
-  let flip_matrix (X:[][]t) =
-    reverse (map (\x -> reverse x) X)
-
-  let add_3d_matrix (X:[][][]t) (Y:[][][]t) =
-    map2 (\x y -> map2 (\xr yr -> map2 (\x' y' -> R.(x' +  y')) xr yr) x y) X Y
+  let empty_garbage : garbage = [[[[]]]]
 
   let add_2d_matrix (X:[][]t) (Y:[][]t) =
     map2 (\xr yr -> map2 (\x y -> R.(x +  y)) xr yr) X Y
@@ -59,7 +55,7 @@ module conv2d (R:real) : layer with t = R.t
   let im2col (X:[][][]t) ((w_m, w_n):(i32, i32)) (idx:[](i32, i32)) : [][]t=
     unsafe transpose  (map (\(i,j) ->  flatten (map (\layer -> flatten layer[i:i+w_m, j:j+w_n]) X)) idx)
 
-  let forward (act:act) ((w_m, w_n):(i32, i32)) (stride:i32) ((w,b):weights) (input:input) : output =
+  let forward (act:act) ((w_m, w_n):(i32, i32)) (stride:i32) (training:bool) ((w,b):weights) (input:input) : (garbage, output) =
     let (x_m, x_n)      = (length input[0,0], length input[0,0,0])
     let (out_m, out_n)  = (((x_m - w_m)/ stride) + 1, ((x_n - w_n)/stride) + 1)
     let indexs          = calc_index stride (out_m, out_n)
@@ -67,7 +63,8 @@ module conv2d (R:real) : layer with t = R.t
     let res             = map (\image -> (lalg.matmul w image) ) image_matrix
     let res_bias        = map (\image -> map2 (\layer b' -> map (\x -> R.(x + b')) layer) image b) res
     let res_act         = map (\image -> map (\layer -> act layer ) image) res_bias
-    in map (\inp -> map (\x -> unflatten out_m out_n x) inp) res_act
+    let garbage = if training then input else empty_garbage
+    in (garbage, map (\inp -> map (\x -> unflatten out_m out_n x) inp) res_act)
 
   let backward (act:act) (k:i32) (stride:i32) ((w,b): weights) (input:input) (error:error_in) : gradients =
     let (x_m , x_n)    = (length input[0,0], length input[0,0,0])
@@ -109,8 +106,8 @@ module conv2d (R:real) : layer with t = R.t
     let w: [][]t  = (random.gen_random_array_2d_w_scaling ((kernel* kernel * depth), filters) seed)
     let b: []t    = map (\_ -> R.(i32 0)) (0..<filters)
    in
-    (\w input -> (input, forward act.1 (kernel,kernel) stride w input),
-     (backward act.2 kernel stride),
-      update,
+    (forward act.1 (kernel,kernel) stride,
+     backward act.2 kernel stride,
+     update,
      (w,b))
 }

@@ -29,8 +29,9 @@ module neural_network (R:real): network  with t = R.t
                                                                ((f2, b2, u2,ws2): NN o1 w2 o2 g2 e2 e22 updater)
                                                                : NN i1 (w1,w2) (o2) (g1,g2) (e2) (e1) (updater) =
 
-    ((\(w1, w2) (input) ->  let (g1, res)  = f1 w1 input
-                            let (g2, res2) = f2 w2 res
+    ((\(training) (w1, w2) (input) ->
+                            let (g1, res)  = f1 training w1 input
+                            let (g2, res2) = f2 training w2 res
                             in ((g1, g2), res2)),
      (\(w1,w2) (g1,g2) (error) ->
                             let (err2, w2') = b2 w2 g2 error
@@ -44,7 +45,7 @@ module neural_network (R:real): network  with t = R.t
 
 
   let predict  'i 'w 'g 'e1 'e2 'u 'o  ((f,_, _ ,w):NN ([]i) w ([]o) g e1 e2 u) (input:[]i) (classification:[]o -> []o)  =
-    let (_, output) = f w input
+    let (_, output) = f false w input
     in classification output
 
   let accuracy [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([]i) w ([]o) g e1 e2 u) (input:[d]i) (labels:[d]o)

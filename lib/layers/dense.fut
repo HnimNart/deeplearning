@@ -32,13 +32,15 @@ module dense (R:real) : layer with t = R.t
   module util   = utility R
   module random = normal_random_array R
 
+  let empty_garbage:garbage= [[]]
    ---- Each input is in a row
-  let forward  (act:act) ((w,b):weights) (input:input) : output =
+  let forward  (act:act) (training:bool) ((w,b):weights) (input:input) : (garbage, output) =
     let product = lalg.matmul w (transpose input)
     let product' =  map2 (\xr b -> map (\x -> (R.(x + b))) xr) product b
     let (m, k) = (length product', length product'[0])
     let output = act (flatten product')
-   in transpose (unflatten m k output)
+    let garbage = if training then input else  empty_garbage
+   in (garbage, transpose (unflatten m k output))
 
   let backward (act:act) ((w,b):weights) (input:input) (error:error_in)  =
     let res              = lalg.matmul (w) (transpose input)
@@ -58,9 +60,9 @@ module dense (R:real) : layer with t = R.t
     let w = random.gen_random_array_2d_w_scaling (m,n) seed
     let b = (map (\_ -> R.(i32 0)) (0..<n))
     in
-    (\w input -> (input, forward act_id.1 w input),
-     (backward act_id.2),
-      update,
-      (w,b))
+    (forward act_id.1 ,
+     backward act_id.2,
+     update,
+     (w,b))
 
 }

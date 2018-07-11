@@ -20,14 +20,12 @@ let nn    = tf.nn.connect_layers nn4 output
 
 
 let main [m][d][n] (input: [m][d]tf.t) (labels: [m][n]tf.t) =
-  let n = 64000
-  let batch_size = 128
+  let n = 10000
+  let batch_size = 100
   let alpha = 0.01
-  let input' = map (\img -> [unflatten 28 28 img]) input[:n]
-  let nn' = tf.train.GradientDescent nn alpha input' labels[:n] batch_size tf.loss.Softmax_cross_entropy_with_logits_2d.2
-  in nn'.4
+  let input' = map (\img -> [unflatten 28 28 img]) input
+  let nn' = tf.train.GradientDescent nn alpha input' labels batch_size tf.loss.Softmax_cross_entropy_with_logits_2d.2
+  -- in nn'.4
 
 
-  -- let test_input = map (\img -> [unflatten 28 28 img]) input-- [n:n+1000]
-  -- let test_label = labels--[n:n+1000]
-  -- in tf.nn.accuracy nn' (test_input) (test_label) (tf.activation.Softmax_2d.1) (tf.nn.argmax)
+  in tf.nn.accuracy nn' (input') (labels) (tf.activation.Softmax_2d.1) (tf.nn.argmax)
