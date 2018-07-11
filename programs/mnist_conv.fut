@@ -18,10 +18,6 @@ let nn3   = tf.nn.connect_layers nn2 flat
 let nn4   = tf.nn.connect_layers nn3 fc
 let nn    = tf.nn.connect_layers nn4 output
 
-let get_dims (X:[][][][]f32) =
-  (length X, length X[0], length X[0,0], length X[0,0,0])
-
-
 
 let main [m][d][n] (input: [m][d]tf.t) (labels: [m][n]tf.t) =
   let n = 64000
