@@ -12,14 +12,14 @@ module dense (R:real) : layer with t = R.t
                               with error_in = ([][]R.t)
                               with error_out = ([][]R.t)
                               with gradients = ([][]R.t ,([][]R.t, []R.t))
-                              with layer = NN ([][]R.t) ([][]R.t,[]R.t) ([][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) (updater ([][]R.t, []R.t))
+                              with layer = NN ([][]R.t) ([][]R.t,[]R.t) ([][]R.t) (([][]R.t, [][]R.t)) ([][]R.t) ([][]R.t) (updater ([][]R.t, []R.t))
                               with act = ([]R.t -> []R.t) = {
 
   type t = R.t
   type input = [][]t
   type weights = ([][]t, []t)
   type output = [][]t
-  type garbage = [][]t
+  type garbage = ([][]t,[][]t)
   type error_in = [][]t
   type error_out = [][]t
   type gradients = (error_out, weights)
@@ -32,23 +32,25 @@ module dense (R:real) : layer with t = R.t
   module util   = utility R
   module random = normal_random_array R
 
-  let empty_garbage:garbage= [[]]
+  let empty_garbage:garbage= ([[]],[[]])
+
    ---- Each input is in a row
   let forward  (act:act) (training:bool) ((w,b):weights) (input:input) : (garbage, output) =
     let product = lalg.matmul w (transpose input)
     let product' =  map2 (\xr b -> map (\x -> (R.(x + b))) xr) product b
     let (m, k) = (length product', length product'[0])
     let output = act (flatten product')
-    let garbage = if training then input else  empty_garbage
+    let garbage = if training then (input,product') else  empty_garbage
    in (garbage, transpose (unflatten m k output))
 
-  let backward (act:act) ((w,b):weights) (input:input) (error:error_in)  =
-    let res              = lalg.matmul (w) (transpose input)
-    let res_bias         = map2 (\xr b -> map (\x -> (R.(x + b))) xr) res b
-    let (res_m, res_n)   = (length res_bias, length res_bias[0])
-    let deriv            = unflatten res_m res_n (act (flatten res_bias))
+  let backward (act:act) ((w,_):weights) ((input0, input1):garbage) (error:error_in)  =
+    -- let res              = lalg.matmul (w) (transpose input)
+    -- let res_bias         = map2 (\xr b -> map (\x -> (R.(x + b))) xr) res b
+    let (res_m, res_n)   = (length input1, length input1[0])
+    let deriv            = unflatten res_m res_n (act (flatten input1))
+    -- let deriv            = unflatten res_m res_n (act (flatten res_bias))
     let delta            = util.mult_matrix (transpose error) deriv
-    let w_grad           = lalg.matmul delta (input)
+    let w_grad           = lalg.matmul delta (input0)
     let b_grad           = map (R.sum) delta
     let error'           = transpose (lalg.matmul (transpose w) delta)
     in (error', (w_grad, b_grad))

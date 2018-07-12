@@ -26,10 +26,10 @@ module type layers = {
 module layers_coll (R:real): layers
                              with t = R.t
                              with act_1d   = ([]R.t -> []R.t, []R.t -> []R.t)
-                             with dense_tp = NN ([][]R.t) ([][]R.t, []R.t) ([][]R.t) ([][]R.t) ([][]R.t) ([][]R.t) (updater ([][]R.t, []R.t))
+                             with dense_tp = NN ([][]R.t) ([][]R.t, []R.t) ([][]R.t) ([][]R.t, [][]R.t) ([][]R.t) ([][]R.t) (updater ([][]R.t, []R.t))
                              with max_pooling2d_tp = NN ([][][][]R.t) () ([][][][]R.t) ([][][][](i32, i32)) ([][][][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
                              with flatten_tp  = NN ([][][][]R.t) () ([][]R.t) ([][][][]R.t) ([][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
-                             with conv2d_tp   = NN ([][][][]R.t) ([][]R.t,[]R.t) ([][][][]R.t) ([][][][]R.t) ([][][][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
+                             with conv2d_tp   = NN ([][][][]R.t) ([][]R.t,[]R.t) ([][][][]R.t) ((i32, i32, i32),[][][]R.t, [][][]R.t) ([][][][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
                                = {
 
   type t = R.t
@@ -39,8 +39,8 @@ module layers_coll (R:real): layers
   module maxpooling2d = max_pooling_2d R
 
   type updater     = updater ([][]t, []t)
-  type dense_tp    = NN ([][]t) ([][]t, []t) ([][]t) ([][]t) ([][]t) ([][]t) updater
-  type conv2d_tp   = NN ([][][][]R.t) ([][]R.t,[]R.t) ([][][][]R.t) ([][][][]R.t) ([][][][]R.t) ([][][][]R.t) updater
+  type dense_tp    = NN ([][]t) ([][]t, []t) ([][]t) ([][]t,[][]t) ([][]t) ([][]t) updater
+  type conv2d_tp   = NN ([][][][]R.t) ([][]R.t,[]R.t) ([][][][]R.t) ((i32, i32, i32), [][][]R.t, [][][]R.t) ([][][][]R.t) ([][][][]R.t) updater
   type flatten_tp  = NN ([][][][]R.t) () ([][]R.t) ([][][][]R.t) ([][]R.t) ([][][][]R.t) updater
   type max_pooling2d_tp = NN ([][][][]R.t) () ([][][][]R.t) ([][][][](i32, i32)) ([][][][]R.t) ([][][][]R.t) updater
 
