@@ -7,13 +7,11 @@ module type optimizers =  {
   type t
 
   type ^updater
-  val GradientDescent 'i 'w 'g 'e2 : NN ([]i) w ([][]t) g ([][]t) e2 updater -> t -> ([]i) -> ([][]t) -> i32 -> ([][]t -> [][]t -> [][]t)
-                             ->  NN ([]i) w ([][]t) g ([][]t) e2 updater
-
-
+  val GradientDescent 'i 'w 'g 'o 'e2 : NN ([]i) w ([]o) g ([]o) (e2) updater -> t -> ([]i) -> ([]o) ->
+                                       i32 -> (o -> o -> t, o -> o -> o)
+                                       ->  NN ([]i) w ([]o) g ([]o) (e2) updater
 
 }
-
 
 
 module optimizers_coll (R:real) : optimizers with t = R.t
@@ -25,9 +23,8 @@ module optimizers_coll (R:real) : optimizers with t = R.t
   module gsd = GradientDescent R
 
 
-  let GradientDescent 'w 'g 'e2 'i (nn:NN ([]i) w ([][]t) g ([][]t) e2 updater) (alpha:t)
-                      (input:[]i) (labels:[][]t) (step_sz: i32) (loss:[][]t -> [][]t -> [][]t) =
-
+  let GradientDescent 'w 'g  'i 'o  'e2 (nn:NN ([]i) w ([]o) g ([]o) (e2) updater) (alpha:t)
+                      (input:[]i) (labels:[]o) (step_sz: i32) (loss:(o -> o -> t , o -> o -> o))  =
     gsd.train nn alpha input labels step_sz loss
 
 }

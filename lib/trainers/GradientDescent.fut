@@ -23,8 +23,8 @@ module GradientDescent (R:real) : trainer with t = R.t
       in (w', b')
 
 
-  let train 'w 'g 'e2 'i ((f,b,u,w):NN ([]i) w ([][]t) g ([][]t) e2 updater) (alpha:t)
-                          (input:[]i) (labels:[][]t) (step_sz: i32) (loss:[][]t -> [][]t -> [][]t) =
+  let train 'w 'g 'o 'e2 'i ((f,b,u,w):NN ([]i) w ([]o) g ([]o) e2 updater) (alpha:t)
+                          (input:[]i) (labels:[]o) (step_sz: i32) (loss:(o -> o -> t , o -> o -> o)) =
 
 
     let i = 0
@@ -32,8 +32,8 @@ module GradientDescent (R:real) : trainer with t = R.t
              let inp' = input[i:i+step_sz]
              let lab  = labels[i:i+step_sz]
              let (os, output) = f true w (inp')
-             let error = loss output lab
-             let (_, grads) = b w os (transpose error)
+             let error = map2 (\o l -> loss.2 o l) output lab
+             let (_, grads) = b w os error
              let w'   = u (update_weights alpha step_sz) w grads
              in (w', i+ step_sz)
     in (f,b, u,w')

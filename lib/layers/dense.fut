@@ -47,10 +47,10 @@ module dense (R:real) : layer with t = R.t
     let res_bias         = map2 (\xr b -> map (\x -> (R.(x + b))) xr) res b
     let (res_m, res_n)   = (length res_bias, length res_bias[0])
     let deriv            = unflatten res_m res_n (act (flatten res_bias))
-    let delta            = util.mult_matrix error deriv
+    let delta            = util.mult_matrix (transpose error) deriv
     let w_grad           = lalg.matmul delta (input)
     let b_grad           = map (R.sum) delta
-    let error'           = lalg.matmul (transpose w) delta
+    let error'           = transpose (lalg.matmul (transpose w) delta)
     in (error', (w_grad, b_grad))
 
   let update (f:updater weights) (w: weights) (wg:weights)  =

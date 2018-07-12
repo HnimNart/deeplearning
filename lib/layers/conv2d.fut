@@ -78,8 +78,7 @@ module conv2d (R:real) : layer with t = R.t
     let error_flat     = map (\err -> map (\x -> flatten x) err) error
     let delta          = util.mult_matrix_3d error_flat res_deriv
 
-    let image_matrix_T = map (\x -> transpose x)  image_matrix
-    let grad_w_all     = map2 (\input' delta' -> lalg.matmul delta' input'  ) image_matrix_T delta
+    let grad_w_all     = map2 (\delta' input'  -> lalg.matmul delta' (transpose input')) delta image_matrix
     -- let grad_w_ne      = map (\_ -> map (\_ -> R.(i32 0)) (0..<length w[0])) (0..<length w)
     -- let grad_w         = foldl (add_2d_matrix) grad_w_ne grad_w_all
     let grad_w         = if length grad_w_all == 1 then grad_w_all[0] else reduce (add_2d_matrix) grad_w_all[0] grad_w_all[:1]

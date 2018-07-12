@@ -6,7 +6,7 @@ module type trainer = {
 
   type ^updater
 
-  val train 'i 'w 'g 'e2 : NN ([]i) w ([][]t) g ([][]t) e2 updater -> t -> ([]i) -> ([][]t) -> i32 -> ([][]t -> [][]t -> [][]t)
-                             ->  NN ([]i) w ([][]t) g ([][]t) e2 updater
+  val train 'i 'w 'g 'e2 'o : NN ([]i) w ([]o) g ([]o) e2 updater -> t -> ([]i) -> ([]o) -> i32 -> (o -> o -> t, o -> o -> o)
+                             ->  NN ([]i) w ([]o) g ([]o) e2 updater
 
 }

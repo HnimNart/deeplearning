@@ -9,9 +9,9 @@ module type loss = {
   type ^loss_diff_1d -- = []t -> []t -> []t
   type ^loss_diff_2d -- = [][]t -> [][]t -> [][]t
 
-  val Cross_entropy_1d : (loss_1d, loss_diff_1d)
-  val Softmax_cross_entropy_with_logits_1d : (loss_1d, loss_diff_1d)
-  val Softmax_cross_entropy_with_logits_2d : (loss_2d, loss_diff_2d)
+  val cross_entropy : (loss_1d, loss_diff_1d)
+  val softmax_cross_entropy_with_logits : (loss_1d, loss_diff_1d)
+  val softmax_cross_entropy_with_logits_2d : (loss_2d, loss_diff_2d)
 
 }
 
@@ -54,14 +54,13 @@ module loss_funcs (R:real) : loss with t = R.t
      map2 (\x y -> softmax_cross_entropy_with_logits_stable_1d' x y) logits labels
 
 
-  let Softmax_cross_entropy_with_logits_1d =
+  let softmax_cross_entropy_with_logits =
     (softmax_cross_entropy_with_logits_stable_1d, softmax_cross_entropy_with_logits_stable_1d')
 
-  let Softmax_cross_entropy_with_logits_2d =
+  let softmax_cross_entropy_with_logits_2d =
     (softmax_cross_entropy_with_logits_stable_2d, softmax_cross_entropy_with_logits_stable_2d')
 
-
-  let Cross_entropy_1d =
+  let cross_entropy =
     (cross_entropy_1d, cross_entropy_1d')
 
 }
