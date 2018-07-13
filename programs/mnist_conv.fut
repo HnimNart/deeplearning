@@ -1,7 +1,6 @@
 import "../lib/tensorflow"
-
 module tf = tensorflow f32
-let seed = 1
+let seed = 2
 
 let conv1     = tf.layers.Conv2d (32, 5, 1, 1) tf.nn.relu seed
 let max_pool1 = tf.layers.Max_pooling2d (2,2)
@@ -18,11 +17,20 @@ let nn3   = tf.nn.connect_layers nn2 flat
 let nn4   = tf.nn.connect_layers nn3 fc
 let nn    = tf.nn.connect_layers nn4 output
 
-
 let main [m][d][n] (input: [m][d]tf.t) (labels: [m][n]tf.t) =
   let input' = map (\img -> [unflatten 28 28 img]) input
-  let n = 64000
   let batch_size = 100
   let alpha = 0.01
-  let nn' = tf.train.GradientDescent nn alpha input' labels batch_size tf.loss.softmax_cross_entropy_with_logits in nn'.4
-  -- in tf.nn.accuracy nn' (input'[:2000]) (labels[:2000]) (tf.nn.softmax) (tf.nn.argmax)
+  let nn' = tf.train.GradientDescent nn alpha input' labels batch_size tf.loss.softmax_cross_entropy_with_logits
+
+  -- let (f, b, _, w) = conv1
+  -- let (os, output) = f true w [input'[0]]
+  -- let (err, _) = b w os output
+
+  let j = 0
+  let size = 1000
+  let acc = 0
+  let (acc, _) = loop (acc, j) while j < length input do
+                 let acc = acc + tf.nn.accuracy nn' (input'[j:j+size]) (labels[j:j+size]) (tf.nn.softmax) (tf.nn.argmax)
+                 in (acc, j + size)
+  in (acc)

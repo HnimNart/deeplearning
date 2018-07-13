@@ -67,7 +67,8 @@ module neural_network (R:real): network  with t = R.t
     let argmax_predictions   = map (\x -> f x) predictions
     let total                = reduce (+) 0 (map2 (\x y -> if x == y then 1 else 0)
                                              argmax_labels argmax_predictions)
-    in R.(i32 total / i32 d)
+    in R.(i32 total)
+    -- in R.(i32 total / i32 d)
 
   let loss [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([]i) w ([]o) g e1 e2 u) (input:[d]i) (labels:[d]o)
                                       (loss: loss_func o) (classification:activation_func o) =

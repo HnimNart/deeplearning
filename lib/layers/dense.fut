@@ -44,11 +44,8 @@ module dense (R:real) : layer with t = R.t
    in (garbage, transpose (unflatten m k output))
 
   let backward (act:act) ((w,_):weights) ((input0, input1):garbage) (error:error_in)  =
-    -- let res              = lalg.matmul (w) (transpose input)
-    -- let res_bias         = map2 (\xr b -> map (\x -> (R.(x + b))) xr) res b
     let (res_m, res_n)   = (length input1, length input1[0])
     let deriv            = unflatten res_m res_n (act (flatten input1))
-    -- let deriv            = unflatten res_m res_n (act (flatten res_bias))
     let delta            = util.mult_matrix (transpose error) deriv
     let w_grad           = lalg.matmul delta (input0)
     let b_grad           = map (R.sum) delta

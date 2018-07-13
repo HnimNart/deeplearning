@@ -12,8 +12,10 @@ module GradientDescent (R:real) : trainer with t = R.t
 
   let update_weights (alpha:t) (batch_size:i32) ((w,b):([][]t, []t)) ((wg,bg):([][]t, []t)) =
 
+
       let wg_mean   = map (map R.((/i32 (batch_size)))) wg
       let bg_mean   = map (R.((/i32 (batch_size)))) bg
+      -- let wg' = map (\xr -> map (\x -> R.(if x > i32 10 then i32 10 else if x < (negate (i32 10)) then (negate (i32 10)) else x)) xr) wg_mean
 
       let wg_scaled = util.scale_matrix wg_mean alpha
       let bg_scaled = util.scale_v bg_mean alpha

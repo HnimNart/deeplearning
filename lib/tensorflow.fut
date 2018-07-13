@@ -19,8 +19,8 @@ module tensorflow (R:real) : {
                         with act_1d = ([]R.t -> []R.t, []R.t -> []R.t)
                         with dense_tp = NN ([][]R.t) ([][]R.t, []R.t) ([][]R.t) ([][]R.t, [][]R.t) ([][]R.t) ([][]R.t) (updater ([][]R.t, []R.t))
                         with max_pooling2d_tp = NN ([][][][]R.t) () ([][][][]R.t) ([][][][](i32, i32)) ([][][][]R.t) ([][][][]R.t)  (updater ([][]R.t, []R.t))
-                        with flatten_tp  = NN ([][][][]R.t) () ([][]R.t) ([][][][]R.t) ([][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
-                        with conv2d_tp   = NN ([][][][]R.t) ([][]R.t,[]R.t) ([][][][]R.t) ((i32, i32, i32), [][][]R.t, [][][]R.t) ([][][][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
+                        with flatten_tp  = NN ([][][][]R.t) () ([][]R.t) (i32, i32, i32, i32) ([][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
+                        with conv2d_tp   = NN ([][][][]R.t) ([][]R.t,[]R.t) ([][][][]R.t) ((i32, i32, i32), [][][]R.t, [][][][]R.t) ([][][][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
 
 
   module train : optimizers with t = R.t
