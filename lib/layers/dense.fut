@@ -28,23 +28,22 @@ module dense (R:real) : layer with t = R.t
 
   let empty_garbage:garbage= ([[]],[[]])
 
-   ---- Each input is in a row
+  ---- Each input is in row
   let forward  (act:[]t -> []t) (training:bool) ((w,b):weights) (input:input) : (garbage, output) =
-    let product = lalg.matmul w (transpose input)
-    let product' =  map2 (\xr b -> map (\x -> (R.(x + b))) xr) product b
-    let (m, k) = (length product', length product'[0])
-    let output = act (flatten product')
-    let garbage = if training then (input,product') else  empty_garbage
-   in (garbage, transpose (unflatten m k output))
+    let res      = lalg.matmul w (transpose input)
+    let res_bias = map2 (\xr b -> map (\x -> (R.(x + b))) xr) res b
+    let res_act  = map (\x -> act x) res_bias
+    let garbage  = if training then (input, res_bias) else empty_garbage
+   in (garbage, transpose res_act)
 
-  let backward (act:[]t -> []t) ((w,_):weights) ((input0, input1):garbage) (error:error_in)  =
-    let (res_m, res_n)   = (length input1, length input1[0])
-    let deriv            = unflatten res_m res_n (act (flatten input1))
+  let backward (act:[]t -> []t) ((w,_):weights) ((input, inp_w_bias):garbage) (error:error_in)  =
+    let (res_m, res_n)   = (length inp_w_bias, length inp_w_bias[0])
+    let deriv            = unflatten res_m res_n (act (flatten inp_w_bias))
     let delta            = util.mult_matrix (transpose error) deriv
-    let w_grad           = lalg.matmul delta (input0)
+    let w_grad           = lalg.matmul delta (input)
     let b_grad           = map (R.sum) delta
     let error'           = transpose (lalg.matmul (transpose w) delta)
-    in (error', (w_grad, b_grad))
+   in (error', (w_grad, b_grad))
 
   let update (f:apply_grad t) (w: weights) (wg:weights)  =
     f w wg
@@ -56,6 +55,6 @@ module dense (R:real) : layer with t = R.t
     (forward act.1,
      backward act.2,
      update,
-     (w,b))
+    (w,b))
 
 }

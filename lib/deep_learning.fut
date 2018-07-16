@@ -5,6 +5,8 @@ import "trainers/optimizers"
 import "layers/layers"
 import "loss_funcs"
 
+
+-- | Aggregation module for deep learning
 module deep_learning (R:real) : {
 
 
@@ -20,9 +22,8 @@ module deep_learning (R:real) : {
   module loss: loss with t = R.t
                     with loss_1d      = (arr1d R.t -> arr1d R.t -> R.t)
                     with loss_2d      = (arr2d R.t -> arr2d R.t -> R.t)
-                    with loss_diff_1d = (arr1d R.t -> arr1d R.t -> arr1d R.t)
-                    with loss_diff_2d = (arr2d R.t -> arr2d R.t -> arr2d R.t)
-
+                    with loss_deriv_1d = (arr1d R.t -> arr1d R.t -> arr1d R.t)
+                    with loss_deriv_2d = (arr2d R.t -> arr2d R.t -> arr2d R.t)
 } = {
 
   type t = R.t

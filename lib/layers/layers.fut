@@ -16,7 +16,6 @@ module type layers = {
 
 }
 
-
 module layers_coll (R:real): layers with t = R.t = {
 
   type t = R.t
@@ -25,18 +24,17 @@ module layers_coll (R:real): layers with t = R.t = {
   module flatten      = flatten R
   module maxpooling2d = max_pooling_2d R
 
-  -- type updater     = updater ([][]t, []t)
-
   let Dense ((m,n):(i32,i32)) (act_id: f_pair_1d t) (seed:i32)  =
-      dense.init (m,n) act_id seed
+    dense.init (m,n) act_id seed
 
   let Conv2d (params:(i32, i32, i32, i32)) (act:f_pair_1d t) (seed:i32) =
-      conv2d.init params act seed
+    conv2d.init params act seed
 
-  let Flatten = flatten.init () () 0
+  let Flatten =
+    flatten.init () () 0
 
   let Max_pooling2d (params:(i32, i32)) =
-     maxpooling2d.init params () 0
+    maxpooling2d.init params () 0
 
 
 }
