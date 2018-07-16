@@ -1,5 +1,5 @@
 import "nn_types"
-import "network"
+import "neural_network"
 import "activations"
 import "trainers/optimizers"
 import "layers/layers"
@@ -8,7 +8,7 @@ import "loss"
 
 
 
-module tensorflow (R:real) : {
+module deep_learning (R:real) : {
 
 
   type t = R.t
@@ -22,10 +22,8 @@ module tensorflow (R:real) : {
                         with flatten_tp  = NN ([][][][]R.t) () ([][]R.t) (i32, i32, i32, i32) ([][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
                         with conv2d_tp   = NN ([][][][]R.t) ([][]R.t,[]R.t) ([][][][]R.t) ((i32, i32, i32), [][][]R.t, [][][][]R.t) ([][][][]R.t) ([][][][]R.t) (updater ([][]R.t, []R.t))
 
-
   module train : optimizers with t = R.t
                             with updater = nn.updater
-
 
   module activation : activations with t = R.t
                                    with act_pair_1d = ([]R.t -> []R.t, []R.t -> []R.t)
