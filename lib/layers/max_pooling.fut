@@ -14,17 +14,16 @@ module max_pooling_2d (R:real) : layer with t = R.t
   type input        = arr4d t
   type weights      = ()
   type output       = arr4d t
-  type garbage      = arr4d (i32)
+  type cache        = arr4d (i32)
   type error_in     = arr4d t
   type error_out    = arr4d t
-  type gradients    = (error_out, weights)
   type input_params = (i32, i32)
   type activations  = ()
-  type layer = max_pooling_tp t
+  type layer        = max_pooling_tp t
 
   --- Finds the maximum value given an matrix
   --- and returns the indexs and the value
-  let max_val [m][n] (input:[m][n]t) =
+  let max_val [m][n] (input:[m][n]t) : ((i32, i32), t) =
     let inp_flat = flatten input
     let argmax   = unsafe reduce (\n i ->
                                   if R.(inp_flat[n] > inp_flat[i])
@@ -33,9 +32,9 @@ module max_pooling_2d (R:real) : layer with t = R.t
     let (i,j)    = (argmax / n, argmax % n )
     in ((i,j), inp_flat[argmax])
 
-  let empty_garbage : garbage = [[[[]]]]
+  let empty_cache : cache = [[[[]]]]
 
-  let forward ((m,n):(i32, i32)) (training:bool) (_:weights) (input:input) : (garbage, output) =
+  let forward ((m,n):(i32, i32)) (training:bool) (_:weights) (input:input) : (cache, output) =
     let (input_m, input_n)    = (length input[0,0], length input[0,0,0])
     let (output_m, output_n)  = (input_m/m, input_n/n)
     let ixs = map (\x -> x * m) (0..<output_m)
@@ -49,26 +48,28 @@ module max_pooling_2d (R:real) : layer with t = R.t
 
     let index   = map (\image -> map (\x -> map (\y -> map (\(is, _) -> is) y) x) image) res
     let output  = map (\image -> map (\x -> map (\y -> map (\(_, r) -> r) y) x) image) res
-    let garbage = if training then index else empty_garbage
-   in (garbage, output)
+    let cache   = if training then index else empty_cache
+   in (cache, output)
 
-  let backward ((m,n): (i32, i32)) (_:weights) (indexs:garbage) (error:error_in) : gradients =
+  let backward ((m,n): (i32, i32)) (first_layer:bool) (_:weights) (indexs:cache) (error:error_in): (error_out, weights) =
+    if first_layer then
+      ([[[[]]]], ())
+    else
     --- Recreate dimensions
-    let (l_m, l_n) = (length indexs[0,0], length indexs[0,0,0])
-    let height     = (l_m*m)
-    let width      = (l_n*n)
-    let total_elem = (height * width)
-
-    let index_flat = map (\image -> map (\layer -> flatten layer) image) indexs
-    let error_flat = map (\image -> map (\layer -> flatten layer) image) error
-    let retval     = map (\_ -> R.(i32 0)) (0..<(total_elem))
-    let error'     =
+      let (l_m, l_n) = (length indexs[0,0], length indexs[0,0,0])
+      let height     = (l_m*m)
+      let width      = (l_n*n)
+      let total_elem = (height * width)
+      let index_flat = map (\image -> map (\layer -> flatten layer) image) indexs
+      let error_flat = map (\image -> map (\layer -> flatten layer) image) error
+      let retval     = map (\_ -> R.(i32 0)) (0..<(total_elem))
+      let error'     =
       map2 (\ix_img err_img -> map2 (\i e -> scatter (copy retval) i e) ix_img err_img) index_flat error_flat
     in (map (\image -> map (\x -> unflatten height width x) image) error', ())
 
-  let update (_:apply_grad t) (_:weights) (_:weights) = ()
+  let update (_:apply_grad t) (_:weights) (_:weights) : weights = ()
 
-  let init ((m,n):(i32, i32)) (_:activations) (_: i32) =
+  let init ((m,n):(i32, i32)) (_:activations) (_: i32) : layer =
     (forward (m,n),
      backward (m,n),
      update,

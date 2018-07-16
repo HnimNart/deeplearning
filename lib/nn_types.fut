@@ -3,9 +3,9 @@
 
 
 --- Network definition
-type forwards   'input 'w 'output 'garbage = bool -> w -> input -> (garbage, output)
-type backwards  'g 'w  'err_in  'err_out   = w -> g ->  err_in  -> (err_out, w)
-type update     'w '^f                     = f -> w -> w -> w
+type forwards   'input 'w 'output 'cache = bool -> w -> input -> (cache, output)
+type backwards  'g 'w  'err_in  'err_out = bool -> w -> g ->  err_in  -> (err_out, w)
+type update     'w '^f                   = f -> w -> w -> w
 
 type NN 'input 'w 'output 'g 'e_in 'e_out '^f = (forwards input w output g,
                                                  backwards g w e_in e_out,

@@ -13,26 +13,28 @@ module flatten (R:real) : layer with t = R.t
   type input        = arr4d t
   type weights      = ()
   type output       = arr2d t
-  type garbage      = (i32, i32, i32)
+  type cache      = (i32, i32, i32)
   type error_in     = arr2d t
   type error_out    = arr4d t
-  type gradients    = (error_out, weights)
   type input_params = ()
   type activations  = ()
 
   type layer = flatten_tp t
 
-  let empty_garbage: garbage = (0, 0, 0)
+  let empty_cache: cache = (0, 0, 0)
 
-  let forward (training: bool) (_:weights) (input:input) : (garbage, output) =
+  let forward (training: bool) (_:weights) (input:input) : (cache, output) =
      let dims = (length input[0], length input[0,0], length input[0,0,0])
-     let garbage = if training then dims else empty_garbage
-     in (garbage, map (\image -> flatten_3d image) input)
+     let cache = if training then dims else empty_cache
+     in (cache, map (\image -> flatten_3d image) input)
 
-  let backward (_: weights) (input:garbage) (error:error_in) : gradients =
-    let (p, m,n) =  input
-    let retval = map (\img -> unflatten_3d p m n img) error
-    in (retval, ())
+  let backward (first_layer:bool) (_: weights) (input:cache) (error:error_in) : (error_out, weights) =
+    if first_layer then
+      ([[[[]]]], ())
+    else
+      let (p,m,n) = input
+      let retval  = map (\img -> unflatten_3d p m n img) error
+      in (retval, ())
 
   let update (_:apply_grad t) (_:weights) (_:weights)  = ()
 
@@ -41,5 +43,4 @@ module flatten (R:real) : layer with t = R.t
      backward,
      update,
      ())
-
 }

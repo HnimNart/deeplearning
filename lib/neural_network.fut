@@ -1,7 +1,5 @@
 import "nn_types"
-import "layers/layers"
 import "activations_funcs"
-
 
 module type network = {
 
@@ -25,7 +23,7 @@ module type network = {
   --- Calculates the accuracy given a network, input, labels and classifier
   val accuracy 'w 'g 'e1 'e2 'i '^u 'o : NN ([]i)  w  ([]o) g e1 e2 u ->   []i -> []o -> (o -> o, o -> o) -> (o -> i32) -> t
   --- Calculates the absolute loss given a network, input, labels, a loss function and classifier
-  val loss 'w 'g 'e1 'e2 '^u 'i 'o     : NN ([]i) w ([]o) g e1 e2 u -> []i -> []o -> (o -> o -> t, o -> o -> o) -> (o -> o, o -> o) -> t
+  val loss 'w 'g 'e1 'e2 '^u 'i 'o : NN ([]i) w ([]o) g e1 e2 u -> []i -> []o -> (o -> o -> t, o -> o -> o) -> (o -> o, o -> o) -> t
 }
 
 module neural_network (R:real): network with t = R.t = {
@@ -44,16 +42,15 @@ module neural_network (R:real): network with t = R.t = {
                             let (g1, res)  = f1 training w1 input
                             let (g2, res2) = f2 training w2 res
                             in ((g1, g2), res2),
-     (\(w1,w2) (g1,g2) (error) ->
-                            let (err2, w2') = b2 w2 g2 error
-                            let (err1, w1') = b1 w1 g1 err2
+     (\(_) (w1,w2) (g1,g2) (error) ->
+                            let (err2, w2') = b2 false w2 g2 error
+                            let (err1, w1') = b1 true w1 g1 err2
                             in (err1, (w1', w2'))),
      (\(f) (w1, w2) (wg1, wg2)  ->
                             let w1' = u1 f w1 wg1
                             let w2' = u2 f w2 wg2
                             in (w1', w2')),
      (ws1, ws2))
-
 
   let predict  'i 'w 'g 'e1 'e2 'u 'o  ((f,_, _ ,w):NN ([]i) w ([]o) g e1 e2 u) (input:[]i) (classifier:activation_func o)  =
     let (_, output) = f false w input
@@ -81,7 +78,6 @@ module neural_network (R:real): network with t = R.t = {
 
   let argmin [n] (X:[n]t) : i32 =
     reduce (\n i -> if unsafe R.(X[n] > X[i]) then n else i) 0 (iota n)
-
 
   --- activation function wrappers
   let identity = act_funcs.Identity_1d
