@@ -1,70 +1,24 @@
-import "/futlib/random"
-import "/futlib/linalg"
-
-
----------------- Random num gen ----------------------
-module type random_generator = {
-
- type t
-  val gen_random_array: i32 -> i32 -> []t
-  val gen_random_array_2d: (i32, i32) -> i32 -> [][]t
-  val gen_random_array_2d_w_scaling: (i32, i32) -> i32 -> [][]t
-
-  val gen_random_array_2d_w_scaling_conv: (i32, i32) -> i32 -> [][]t
-  val gen_random_array_3d: (i32,i32, i32) -> i32 -> [][][]t
-
-}
-
-module normal_random_array (R:real) : random_generator
-                                      with t = R.t = {
-
-  type t = R.t
-
-  module dist = normal_distribution R minstd_rand
-  let stdnorm = {mean = R.(i32 0), stddev = R.(i32 1)}
-
-  let gen_rand (i: i32) : t =
-    let rng = dist.engine.rng_from_seed [i]
-    let (_, x) = dist.rand stdnorm rng in
-    let retval =  R.(if isinf x then i32 0 else x) in retval
-
-  let gen_random_array (d: i32) (seed: i32) : []t =
-    map gen_rand (map (\x -> x + d + seed) (iota d))
-
-  let gen_random_array_2d_w_scaling_conv ((m,n):(i32, i32)) (seed:i32) : [][]t =
-    let n_sqrt = R.(sqrt (i32 m))
-    let arr = gen_random_array (m*n) seed
-    in unflatten n m (map (\x -> R.(x * n_sqrt)) arr)
-
-  let gen_random_array_2d_w_scaling ((m,n):(i32, i32)) (seed:i32) : [][]t =
-    let n_sqrt = R.(sqrt (i32 n))
-    let arr = gen_random_array (m*n) seed
-    in unflatten n m (map (\x -> R.(x / n_sqrt)) arr)
-
-  let gen_random_array_2d ((m,n):(i32, i32)) (seed:i32) : [][]t =
-    let arr = gen_random_array (m*n) seed
-    in unflatten n m arr
-
-  let gen_random_array_3d ((m,n,p):(i32, i32, i32)) (seed:i32) : [][][]t =
-    map (\i -> gen_random_array_2d (m,n) (seed+i)) (0..<p)
-
-}
+-- | Common utility functions used throughout
+--   the deep learning code
 
 module utility (R:real) : {
 
   type t = R.t
 
-  val mult_matrix_4d: [][][][]t -> [][][][]t -> [][][][]t
-  val mult_matrix_3d: [][][]t -> [][][]t -> [][][]t
+  --- all vector and matrix functions are
+  --- element wise
+  val mult_v : []t -> []t -> []t
+  val sub_v  : []t -> []t -> []t
+  val scale_v: []t -> t -> []t
 
   val mult_matrix: [][]t -> [][]t -> [][]t
   val sub_matrix:  [][]t -> [][]t -> [][]t
   val add_matrix:  [][]t -> [][]t -> [][]t
   val scale_matrix: [][]t -> t -> [][]t
 
-  val mult_v : []t -> []t -> []t
-  val sub_v  : []t -> []t -> []t
-  val scale_v: []t -> t -> []t
+  val mult_matrix_3d: [][][]t -> [][][]t -> [][][]t
+
+  val mult_matrix_4d: [][][][]t -> [][][][]t -> [][][][]t
 
   val diag: []t -> [][]t
   val extract_diag: [][]t -> []t
@@ -82,9 +36,6 @@ module utility (R:real) : {
   let sub_v [d] (x: [d]t) (y: [d]t) : [d]t =
     map2 (\x y -> R.(x - y)) x y
 
-
-
-  -- Element wise
   let mult_matrix_3d  [m][n][d] (X: [m][n][d]t) (Y:[m][n][d]t) : [m][n][d]t =
     map2 (\X1 Y1 -> map2 (\xr yr -> map2 (\xc yc -> R.(xc * yc)) xr yr) X1 Y1) X Y
 

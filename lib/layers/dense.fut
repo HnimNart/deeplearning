@@ -1,32 +1,26 @@
 import "layer_type"
 import "../nn_types"
-import "../activations"
-import "/futlib/linalg"
 import "../util"
+import "../random_gen"
+import "/futlib/linalg"
 
 module dense (R:real) : layer with t = R.t
-                              with input = [][]R.t
-                              with weights = ([][]R.t, []R.t)
                               with input_params = (i32, i32)
-                              with output  = ([][]R.t)
-                              with error_in = ([][]R.t)
-                              with error_out = ([][]R.t)
-                              with gradients = ([][]R.t ,([][]R.t, []R.t))
-                              with layer = NN ([][]R.t) ([][]R.t,[]R.t) ([][]R.t) (([][]R.t, [][]R.t)) ([][]R.t) ([][]R.t) (updater ([][]R.t, []R.t))
-                              with act = ([]R.t -> []R.t) = {
+                              with activations = (f_pair_1d R.t)
+                              with layer = dense_tp R.t = {
 
-  type t = R.t
-  type input = [][]t
-  type weights = ([][]t, []t)
-  type output = [][]t
-  type garbage = ([][]t,[][]t)
-  type error_in = [][]t
-  type error_out = [][]t
-  type gradients = (error_out, weights)
+  type t            = R.t
+  type input        = arr2d t
+  type weights      = std_weights R.t
+  type output       = arr2d t
+  type garbage      = (arr2d t, arr2d t)
+  type error_in     = arr2d t
+  type error_out    = arr2d t
+  type gradients    = (error_out, weights)
   type input_params = (i32, i32)
+  type activations  = f_pair_1d t
 
-  type act = []t -> []t
-  type layer = NN input weights output garbage error_in error_out (updater weights)
+  type layer = dense_tp t
 
   module lalg   = linalg R
   module util   = utility R
@@ -35,7 +29,7 @@ module dense (R:real) : layer with t = R.t
   let empty_garbage:garbage= ([[]],[[]])
 
    ---- Each input is in a row
-  let forward  (act:act) (training:bool) ((w,b):weights) (input:input) : (garbage, output) =
+  let forward  (act:[]t -> []t) (training:bool) ((w,b):weights) (input:input) : (garbage, output) =
     let product = lalg.matmul w (transpose input)
     let product' =  map2 (\xr b -> map (\x -> (R.(x + b))) xr) product b
     let (m, k) = (length product', length product'[0])
@@ -43,7 +37,7 @@ module dense (R:real) : layer with t = R.t
     let garbage = if training then (input,product') else  empty_garbage
    in (garbage, transpose (unflatten m k output))
 
-  let backward (act:act) ((w,_):weights) ((input0, input1):garbage) (error:error_in)  =
+  let backward (act:[]t -> []t) ((w,_):weights) ((input0, input1):garbage) (error:error_in)  =
     let (res_m, res_n)   = (length input1, length input1[0])
     let deriv            = unflatten res_m res_n (act (flatten input1))
     let delta            = util.mult_matrix (transpose error) deriv
@@ -52,15 +46,15 @@ module dense (R:real) : layer with t = R.t
     let error'           = transpose (lalg.matmul (transpose w) delta)
     in (error', (w_grad, b_grad))
 
-  let update (f:updater weights) (w: weights) (wg:weights)  =
+  let update (f:apply_grad t) (w: weights) (wg:weights)  =
     f w wg
 
-  let init ((m,n):input_params) (act_id: (act, act)) (seed:i32)  =
+  let init ((m,n):input_params) (act:activations) (seed:i32)  =
     let w = random.gen_random_array_2d_w_scaling (m,n) seed
     let b = (map (\_ -> R.(i32 0)) (0..<n))
     in
-    (forward act_id.1 ,
-     backward act_id.2,
+    (forward act.1,
+     backward act.2,
      update,
      (w,b))
 

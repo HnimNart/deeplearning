@@ -1,20 +1,23 @@
-import "activations"
+import "activations_funcs"
 
+-- | loss functions are defined as a tuple
+--   of two function i.e.
+--   1. The function itself and
+--   2. it's derivative w.r.t. to logits
 module type loss = {
 
   type t
-  type ^loss_1d -- = []t -> []t -> t
-  type ^loss_2d -- = [][]t -> [][]t -> t
+  type ^loss_1d
+  type ^loss_2d
 
-  type ^loss_diff_1d -- = []t -> []t -> []t
-  type ^loss_diff_2d -- = [][]t -> [][]t -> [][]t
+  type ^loss_diff_1d
+  type ^loss_diff_2d
 
   val cross_entropy : (loss_1d, loss_diff_1d)
   val softmax_cross_entropy_with_logits : (loss_1d, loss_diff_1d)
   val softmax_cross_entropy_with_logits_2d : (loss_2d, loss_diff_2d)
 
 }
-
 
 module loss_funcs (R:real) : loss with t = R.t
                                   with loss_1d = ([]R.t -> []R.t -> R.t)

@@ -1,5 +1,10 @@
 import "util"
+import "nn_types"
 
+-- | Activation functions are defined as a tuple
+--   of two function i.e.
+--   1. The function itself and
+--   2. it's derivative
 module type activations = {
 
   type t
@@ -21,13 +26,12 @@ module type activations = {
 }
 
 module activation_funcs (R:real) : activations with t = R.t
-                                                with act_pair_1d = ([]R.t -> []R.t, []R.t -> []R.t)
-                                                with act_pair_2d = ([][]R.t -> [][]R.t, [][]R.t -> [][]R.t)
-                                                = {
+                                               with act_pair_1d = f_pair_1d R.t
+                                               with act_pair_2d = f_pair_2d R.t = {
 
   type t = R.t
-  type act_pair_1d = ([]t -> []t, []t -> []t)
-  type act_pair_2d = ([][]t -> [][]t, [][]t -> [][]t)
+  type act_pair_1d = f_pair_1d t
+  type act_pair_2d = f_pair_2d t
 
   module util = utility R
 
