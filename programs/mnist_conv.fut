@@ -22,11 +22,11 @@ let main [m][d][n] (input: [m][d]dl.t) (labels: [m][n]dl.t) =
   let batch_size = 100
   let alpha = 0.01
   let nn' = dl.train.GradientDescent nn alpha input' labels batch_size dl.loss.softmax_cross_entropy_with_logits
-
-  let j = 0
-  let size = 1000
-  let acc = 0
-  let (acc, _) = loop (acc, j) while j < length input do
-                 let acc = acc + dl.nn.accuracy nn' (input'[j:j+size]) (labels[j:j+size]) (dl.nn.softmax) (dl.nn.argmax)
-                 in (acc, j + size)
-  in (acc)
+  in nn'.4
+  -- let j = 0
+  -- let size = 1000
+  -- let acc = 0
+  -- let (acc, _) = loop (acc, j) while j < length input do
+  --                let acc = acc + dl.nn.accuracy nn' (input'[j:j+size]) (labels[j:j+size]) (dl.nn.softmax) (dl.nn.argmax)
+  --                in (acc, j + size)
+  -- in (acc)

@@ -1,16 +1,14 @@
 -- | Network types
 
-
-
---- Network definition
 type forwards   'input 'w 'output 'cache = bool -> w -> input -> (cache, output)
-type backwards  'g 'w  'err_in  'err_out = bool -> w -> g ->  err_in  -> (err_out, w)
+type backwards  'c 'w  'err_in  'err_out = bool -> w -> c ->  err_in  -> (err_out, w)
 type update     'w '^f                   = f -> w -> w -> w
 
-type NN 'input 'w 'output 'g 'e_in 'e_out '^f = (forwards input w output g,
-                                                 backwards g w e_in e_out,
+type NN 'input 'w 'output 'c 'e_in 'e_out '^f = (forwards input w output c,
+                                                 backwards c w e_in e_out,
                                                  update w f,
                                                  w)
+
 --- Commonly used types
 type arr1d 't = []t
 type arr2d 't = [][]t

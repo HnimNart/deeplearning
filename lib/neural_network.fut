@@ -17,7 +17,7 @@ module type network = {
   val argmin : []t -> i32
 
   --- Combines two 'networks' into one
-  val connect_layers 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22: NN i1 w1 o1 g1 e22 e1 (apply_grad t) -> NN o1 w2 o2 g2 e2 e22 (apply_grad t) -> NN i1 (w1, w2) (o2) (g1,g2) (e2) (e1) (apply_grad t)
+  val connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e22: NN i1 w1 o1 c1 e22 e1 (apply_grad t) -> NN o1 w2 o2 c2 e2 e22 (apply_grad t) -> NN i1 (w1, w2) (o2) (c1,c2) (e2) (e1) (apply_grad t)
   --- Performs predictions on data set given a network, input data and classifier
   val predict 'w 'g 'i 'e1 'e2 '^u 'o  : NN ([]i) (w) ([]o) g e1 e2 u -> []i -> (o -> o, o -> o) -> []o
   --- Calculates the accuracy given a network, input, labels and classifier
@@ -34,21 +34,21 @@ module neural_network (R:real): network with t = R.t = {
 
   module act_funcs = activation_funcs R
 
-  let connect_layers 'w1 'w2 'i1 'o1 'o2 'g1 'g2 'e1 'e2 'e22  ((f1, b1, u1, ws1): NN i1 w1 o1 g1 e22 e1 (apply_grad t))
-                                                               ((f2, b2, u2, ws2): NN o1 w2 o2 g2 e2 e22 (apply_grad t))
-                                                               : NN i1 (w1,w2) (o2) (g1,g2) (e2) (e1) (apply_grad t) =
+  let connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e  ((f1, b1, u1, ws1): NN i1 w1 o1 c1 e e1 (apply_grad t))
+                                                               ((f2, b2, u2, ws2): NN o1 w2 o2 c2 e2 e (apply_grad t))
+                                                               : NN i1 (w1,w2) (o2) (c1,c2) (e2) (e1) (apply_grad t) =
 
     (\(training) (w1, w2) (input) ->
-                            let (g1, res)  = f1 training w1 input
-                            let (g2, res2) = f2 training w2 res
-                            in ((g1, g2), res2),
-     (\(_) (w1,w2) (g1,g2) (error) ->
-                            let (err2, w2') = b2 false w2 g2 error
-                            let (err1, w1') = b1 true w1 g1 err2
+                            let (c1, res)  = f1 training w1 input
+                            let (c2, res2) = f2 training w2 res
+                            in ((c1, c2), res2),
+     (\(_) (w1,w2) (c1,c2) (error) ->
+                            let (err2, w2') = b2 false w2 c2 error
+                            let (err1, w1') = b1 true w1 c1 err2
                             in (err1, (w1', w2'))),
-     (\(f) (w1, w2) (wg1, wg2)  ->
-                            let w1' = u1 f w1 wg1
-                            let w2' = u2 f w2 wg2
+     (\(f) (w1, w2) (wc1, wc2)  ->
+                            let w1' = u1 f w1 wc1
+                            let w2' = u2 f w2 wc2
                             in (w1', w2')),
      (ws1, ws2))
 
