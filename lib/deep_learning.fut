@@ -1,14 +1,13 @@
 import "nn_types"
 import "neural_network"
 import "activations_funcs"
-import "trainers/optimizers"
+import "optimizers/optimizers"
 import "layers/layers"
 import "loss_funcs"
 
 
 -- | Aggregation module for deep learning
 module deep_learning (R:real) : {
-
 
   type t = R.t
   module nn     : network    with t = R.t
@@ -20,10 +19,8 @@ module deep_learning (R:real) : {
                                   with act_pair_2d = f_pair_2d R.t
 
   module loss: loss with t = R.t
-                    with loss_1d      = (arr1d R.t -> arr1d R.t -> R.t)
-                    with loss_2d      = (arr2d R.t -> arr2d R.t -> R.t)
-                    with loss_deriv_1d = (arr1d R.t -> arr1d R.t -> arr1d R.t)
-                    with loss_deriv_2d = (arr2d R.t -> arr2d R.t -> arr2d R.t)
+                    with loss_1d      = loss_pair_1d R.t
+                    with loss_2d      = loss_pair_2d R.t
 } = {
 
   type t = R.t
@@ -32,5 +29,4 @@ module deep_learning (R:real) : {
   module activation = activation_funcs R
   module loss = loss_funcs R
   module train = optimizers_coll R
-
 }

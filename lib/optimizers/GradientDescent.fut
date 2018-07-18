@@ -6,15 +6,17 @@ import "../util"
 
 -- | Plain vanilla gradient descent optimizer
 --   with mean gradient
-module GradientDescent (R:real) : trainer with t = R.t = {
+module GradientDescent (R:real) : trainer with t = R.t
+                                          with alpha = R.t = {
 
   type t = R.t
+  type alpha = t
   module util = utility R
 
-  let update_weights (alpha:t) (batch_size:i32) ((w,b):(std_weights t)) ((wg,bg):(std_weights t)) =
+  let update_weights (alpha:alpha) (batch_size:i32) ((w,b):(std_weights t)) ((wg,bg):(std_weights t)) =
 
-      let wg_mean   = map (map R.((/i32 (batch_size)))) wg
-      let bg_mean   = map (R.((/i32 (batch_size)))) bg
+      let wg_mean   = map (map R.((/i32 batch_size))) wg
+      let bg_mean   = map (R.((/i32 batch_size))) bg
 
       let wg_scaled = util.scale_matrix wg_mean alpha
       let bg_scaled = util.scale_v bg_mean alpha
@@ -23,10 +25,10 @@ module GradientDescent (R:real) : trainer with t = R.t = {
       let b'        = util.sub_v b bg_scaled
     in (w', b')
 
-  let train 'w 'g 'o 'e2 'i ((f,b,u,w):NN ([]i) w ([]o) g ([]o) e2 (apply_grad t))
-                             (alpha:t)
-                             (input:[]i)
-                             (labels:[]o)
+  let train [n] 'w 'g 'o 'e2 'i ((f,b,u,w):NN ([]i) w ([]o) g ([]o) e2 (apply_grad t))
+                             (alpha:alpha)
+                             (input:[n]i)
+                             (labels:[n]o)
                              (batch_sz: i32)
                              (loss:(o -> o -> t , o -> o -> o)) =
 
