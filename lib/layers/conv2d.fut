@@ -62,12 +62,18 @@ module conv2d (R:real) : layer with t = R.t
     let res             = map (\image -> (lalg.matmul w image) ) image_matrix
     let res_bias        = map (\image ->
                                map2 (\layer b' -> map (\x -> R.(x + b')) layer) image b) res
-    let res_bias'       = map (\inp ->
-                               map (\x -> unflatten out_m out_n x) inp) res_bias
+
     let res_act         = map (\image ->
                                map (\layer -> act layer ) image) res_bias
-    let cache         = if training then ((x_p, x_m, x_n), image_matrix, res_bias') else empty_cache
-    in (cache, map (\inp -> map (\x -> unflatten out_m out_n x) inp) res_act)
+    let cache           = if training
+                          then
+                          let res_bias' = map (\inp ->
+                                               map (\x ->
+                                                    unflatten out_m out_n x) inp) res_bias
+                          in ((x_p, x_m, x_n), image_matrix, res_bias')
+                          else empty_cache
+    let output = map (\inp -> map (\x -> unflatten out_m out_n x) inp) res_act
+    in (cache, output)
 
 
 

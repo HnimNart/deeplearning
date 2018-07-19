@@ -13,7 +13,7 @@ module GradientDescent (R:real) : trainer with t = R.t
   type alpha = t
   module util = utility R
 
-  let update_weights (alpha:alpha) (batch_size:i32) ((w,b):(std_weights t)) ((wg,bg):(std_weights t)) =
+  let apply_weights (alpha:alpha) (batch_size:i32) ((w,b):(std_weights t)) ((wg,bg):(std_weights t)) =
 
       let wg_mean   = map (map R.((/i32 batch_size))) wg
       let bg_mean   = map (R.((/i32 batch_size))) bg
@@ -39,7 +39,7 @@ module GradientDescent (R:real) : trainer with t = R.t
                    let (cache, output) = f true w (inp')
                    let error           = map2 (\o l -> loss.2 o l) output lab
                    let (_, grads)      = b false w cache error
-                   let w'              = u (update_weights alpha batch_sz) w grads
+                   let w'              = u (apply_weights alpha batch_sz) w grads
                    in (w', i + batch_sz)
     in (f,b,u,w')
 
