@@ -38,18 +38,17 @@ module dense (R:real) : layer with t = R.t
   ---- Each input is in row
   let forward  (act:[]t -> []t) (training:bool) ((w,b):weights) (input:input) : (cache, output) =
     let res      = lalg.matmul w (transpose input)
-    let res_bias = map2 (\xr b -> map (\x -> (R.(x + b))) xr) res b
-    let res_act  = map (\x -> act x) res_bias
-    let cache  = if training then (input, res_bias) else empty_cache
-    in (cache, transpose res_act)
+    let res_bias = transpose (map2 (\xr b' -> map (\x -> (R.(x + b'))) xr) res b)
+    let res_act  = map (\x -> act x) (res_bias)
+    let cache    = if training then (input, res_bias) else empty_cache
+    in (cache, res_act)
 
   let backward (act:[]t -> []t) (first_layer:bool) ((w,_):weights)
                                 ((input, inp_w_bias):cache)
                                 (error:error_in) : b_output =
 
-    let (res_m, res_n)   = (length inp_w_bias, length inp_w_bias[0])
-    let deriv            = unflatten res_m res_n (act (flatten inp_w_bias))
-    let delta            = util.mult_matrix (transpose error) deriv
+    let deriv            = (map (\x -> act x) inp_w_bias)
+    let delta            = transpose (util.mult_matrix error deriv)
     let w_grad           = lalg.matmul delta (input)
     let b_grad           = map (R.sum) delta
     let error' =
@@ -64,7 +63,7 @@ module dense (R:real) : layer with t = R.t
     f w wg
 
   let init ((m,n):input_params) (act:activations) (seed:i32) : dense_tp =
-    let w = random.gen_random_array_2d_w_scaling (m,n) seed
+    let w = random.gen_random_array_2d_xavier_uni (m,n) seed
     let b = map (\_ -> R.(i32 0)) (0..<n)
     in
     (forward act.1,

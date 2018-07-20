@@ -12,18 +12,24 @@ module type network = {
   val tanh     : f_pair_1d t
   val softmax  : f_pair_1d t
 
-  --- helper functions for calc accuracy
+  --- helper functions for calculating accuracy
   val argmax : []t -> i32
   val argmin : []t -> i32
 
   --- Combines two 'networks' into one
-  val connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e22: NN i1 w1 o1 c1 e22 e1 (apply_grad t) -> NN o1 w2 o2 c2 e2 e22 (apply_grad t) -> NN i1 (w1, w2) (o2) (c1,c2) (e2) (e1) (apply_grad t)
+  val connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e22:
+                      NN i1 w1 o1 c1 e22 e1 (apply_grad t) ->
+                      NN o1 w2 o2 c2 e2 e22 (apply_grad t) ->
+                      NN i1 (w1, w2) (o2) (c1,c2) (e2) (e1) (apply_grad t)
   --- Performs predictions on data set given a network, input data and classifier
-  val predict 'w 'g 'i 'e1 'e2 '^u 'o  : NN ([]i) (w) ([]o) g e1 e2 u -> []i -> (o -> o, o -> o) -> []o
+  val predict 'w 'g 'i 'e1 'e2 '^u 'o  : NN ([]i) (w) ([]o) g e1 e2 u -> []i ->
+                                         (o -> o, o -> o) -> []o
   --- Calculates the accuracy given a network, input, labels and classifier
-  val accuracy 'w 'g 'e1 'e2 'i '^u 'o : NN ([]i)  w  ([]o) g e1 e2 u ->   []i -> []o -> (o -> o, o -> o) -> (o -> i32) -> t
+  val accuracy 'w 'g 'e1 'e2 'i '^u 'o : NN ([]i)  w  ([]o) g e1 e2 u ->
+                                         []i -> []o -> (o -> o, o -> o) -> (o -> i32) -> t
   --- Calculates the absolute loss given a network, input, labels, a loss function and classifier
-  val loss 'w 'g 'e1 'e2 '^u 'i 'o : NN ([]i) w ([]o) g e1 e2 u -> []i -> []o -> (o -> o -> t, o -> o -> o) -> (o -> o, o -> o) -> t
+  val loss 'w 'g 'e1 'e2 '^u 'i 'o : NN ([]i) w ([]o) g e1 e2 u -> []i -> []o ->
+                                     (o -> o -> t, o -> o -> o) -> (o -> o, o -> o) -> t
 }
 
 module neural_network (R:real): network with t = R.t = {

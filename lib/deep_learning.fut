@@ -16,11 +16,9 @@ module deep_learning (R:real) : {
 
   module activation : activations with t = R.t
                                   with act_pair_1d = f_pair_1d R.t
-                                  with act_pair_2d = f_pair_2d R.t
 
   module loss: loss with t = R.t
                     with loss_1d      = loss_pair_1d R.t
-                    with loss_2d      = loss_pair_2d R.t
 } = {
 
   type t = R.t

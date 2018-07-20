@@ -5,48 +5,49 @@ import "/futlib/random"
 module type random_generator = {
 
   type t
-  val gen_random_array: i32 -> i32 -> []t
-  val gen_random_array_2d: (i32, i32) -> i32 -> [][]t
-  val gen_random_array_2d_w_scaling: (i32, i32) -> i32 -> [][]t
-  val gen_random_array_2d_w_scaling_conv: (i32, i32) -> i32 -> [][]t
-  val gen_random_array_3d: (i32,i32, i32) -> i32 -> [][][]t
+  val gen_random_array_2d_xavier_uni: (i32, i32) -> i32 -> [][]t
+  val gen_random_array_2d_xavier_norm: (i32, i32) -> i32 -> [][]t
 
 }
 
-
---- Generate random numbers from a standard normal distribution
---- Some provides scaling s.t. Var(X) = 1/sqrt(N_in)
+--- Generate random numbers using xavier initilization
 module normal_random_array (R:real) : random_generator
                                       with t = R.t = {
-
   type t = R.t
 
-  module dist = normal_distribution R minstd_rand
-  let stdnorm = {mean = R.(i32 0), stddev = R.(i32 1)}
+  module norm = normal_distribution R minstd_rand
+  module uni  = uniform_real_distribution R minstd_rand
 
-  let gen_rand (i: i32) : t =
-    let rng = dist.engine.rng_from_seed [i]
-    let (_, x) = dist.rand stdnorm rng in
-    let retval =  R.(if isinf x then i32 0 else x) in retval
+  ---- Using xavier uniform initializer [-limit, limit]
+  ---- with limit = sqrt(6/(fan_in + fan_out))
+  let gen_rand_uni (i:i32)  (dist:(uni.num.t, uni.num.t)): t =
+    let rng = uni.engine.rng_from_seed [i]
+    let (_, x) = uni.rand dist rng in x
 
-  let gen_random_array (d: i32) (seed: i32) : []t =
-    map gen_rand (map (\x -> x + d + seed) (iota d))
+  let gen_random_array_uni (d: i32) (dist) (seed: i32) : []t =
+    map (\x -> gen_rand_uni x dist) (map (\x -> x + d + seed) (iota d))
 
-  let gen_random_array_2d_w_scaling_conv ((m,n):(i32, i32)) (seed:i32) : [][]t =
-    let n_sqrt = R.(sqrt (i32 m))
-    let arr = gen_random_array (m*n) seed
-    in unflatten n m (map (\x -> R.(x * n_sqrt)) arr)
-
-  let gen_random_array_2d_w_scaling ((m,n):(i32, i32)) (seed:i32) : [][]t =
-    let n_sqrt = R.(sqrt (i32 n))
-    let arr = gen_random_array (m*n) seed
-    in unflatten n m (map (\x -> R.(x / n_sqrt)) arr)
-
-  let gen_random_array_2d ((m,n):(i32, i32)) (seed:i32) : [][]t =
-    let arr = gen_random_array (m*n) seed
+  let gen_random_array_2d_xavier_uni ((m,n):(i32, i32)) (seed:i32) : [][]t =
+    let d = R.(((sqrt((i32 6)) / sqrt(i32 n + i32 m))) )
+    let arr = gen_random_array_uni (m*n) ( R.(negate d),d) seed
     in unflatten n m arr
 
-  let gen_random_array_3d ((m,n,p):(i32, i32, i32)) (seed:i32) : [][][]t =
-    map (\i -> gen_random_array_2d (m,n) (seed+i)) (0..<p)
+  --- Using xavier norm initialize
+  --- with mean = 0 and std = sqrt(2 / (fan_in + fan_out))
+  --- Unstable! produces inf in some cases
+  let gen_rand_norm (i: i32) (dist) : t =
+    let rng = norm.engine.rng_from_seed [i]
+    let (_, x) = norm.rand dist rng in
+    let retval =  R.(if isinf x then i32 0 else x) in retval
+
+  let gen_random_array_norm (d: i32) (seed: i32) (dist) : []t =
+    map (\x -> gen_rand_norm x dist) (map (\x -> x + d + seed) (iota d))
+
+  let gen_random_array_2d_xavier_norm ((m,n):(i32, i32)) (seed:i32) : [][]t =
+    let n_sqrt = R.(sqrt (i32 2/ (i32 m + i32 n)))
+    let dist = {mean = R.(i32 0), stddev = n_sqrt}
+    let arr = gen_random_array_norm (m*n) seed dist
+    in unflatten n m (map (\x -> R.(x / n_sqrt)) arr)
+
 
 }

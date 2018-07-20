@@ -110,7 +110,7 @@ module conv2d (R:real) : layer with t = R.t
     f w wg
 
   let init ((filters, kernel, stride, depth):input_params)  (act:activations)  (seed: i32)  =
-    let w: arr2d  t  = (random.gen_random_array_2d_w_scaling ((kernel* kernel * depth), filters) seed)
+    let w: arr2d  t  = (random.gen_random_array_2d_xavier_uni ((kernel* kernel * depth), filters) seed)
     let b: arr1d  t  = map (\_ -> R.(i32 0)) (0..<filters)
    in
     (forward act.1 (kernel,kernel) stride,

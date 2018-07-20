@@ -25,7 +25,5 @@ type apply_grad 't  = std_weights t -> std_weights t -> std_weights t
 --- Function pairs
 --- Denotes a function and it's derivative
 type f_pair_1d 't = ([]t -> []t, []t-> []t)
-type f_pair_2d 't = ([][]t -> [][]t, [][]t-> [][]t)
 
 type loss_pair_1d 't = ([]t -> []t -> t, []t -> []t -> []t )
-type loss_pair_2d 't = ([][]t -> [][]t -> t, [][]t -> [][]t -> [][]t)
