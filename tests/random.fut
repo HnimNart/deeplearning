@@ -1,19 +1,15 @@
+import "../lib/random_gen"
 
+module random = normal_random_array f64
 
+-- ==
+-- entry: xavier_1
+-- input  { [10, 10] }  output { true }
+-- input  { [1000, 1000] }  output { true }
+-- input  { [128, 256] }  output { true }
 
-
-
-import "../lib/util"
-
-
-
-module random = normal_random_array f32
-
-
-let main =
-  let n = 10000
-  let a = random.gen_random_array n 1
-  let mean_a = (reduce (+) 0.0 a) f32./ f32.(i32  n)
-  let tmp    = map (\x -> (x-mean_a)**2) a
-  let sum_tmp = reduce (+) 0.0 tmp
-  in sum_tmp / f32.(i32 n - 1)
+entry xavier_1 input =
+  let (m,n) = (input[0], input[1])
+  let arr = flatten  (random.gen_random_array_2d_xavier_uni (m,n) 1)
+  let lim = f64.((sqrt((i32 6)) / sqrt(i32 n + i32 m)))
+  in ((f64.(minimum arr >= (negate lim)) && f64.(minimum arr <= lim) ))
