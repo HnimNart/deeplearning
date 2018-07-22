@@ -19,13 +19,8 @@ let nn    = dl.nn.connect_layers nn4 output
 
 let main [m][d][n] (input: [m][d]dl.t) (labels: [m][n]dl.t) =
   let input' = map (\img -> [unflatten 28 28 img]) input
-  let batch_size = 100
+  let n = 64000
+  let batch_size = 128
   let alpha = 0.01
-  let nn' = dl.train.GradientDescent nn alpha input' labels batch_size dl.loss.softmax_cross_entropy_with_logits
-  let j = 0
-  let size = 1000
-  let acc = 0
-  let (acc, _) = loop (acc, j) while j < length input do
-                 let acc = acc + dl.nn.accuracy nn' (input'[j:j+size]) (labels[j:j+size]) (dl.nn.softmax) (dl.nn.argmax)
-                 in (acc, j + size)
-  in (acc)
+  let nn' = dl.train.GradientDescent nn alpha input'[:64000] labels[:64000] batch_size dl.loss.softmax_cross_entropy_with_logits
+  in nn'.3

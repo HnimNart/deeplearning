@@ -75,9 +75,7 @@ module conv2d (R:real) : layer with t = R.t
     let output = map (\inp -> map (\x -> unflatten out_m out_n x) inp) res_act
     in (cache, output)
 
-
-
-  let backward (act:[]t->[]t) (k:i32) (stride:i32) (first_layer:bool) ((w,_): weights)
+  let backward (act:[]t->[]t) (k:i32) (stride:i32)   (first_layer:bool) (apply_grads:apply_grad t) ((w,b): weights)
                                       ((dims, input0, input1):cache) (error:error_in) : b_output =
     let (x_p, x_m, x_n) = dims
     let res_deriv       = map (\image -> map (\layer ->  map (\row -> act row) layer) image) input1
@@ -86,9 +84,10 @@ module conv2d (R:real) : layer with t = R.t
     let delta_flat      = map (\img -> map (\x -> flatten x) img) delta
     let grads_w         = map2 (\i d -> transpose (lalg.matmul i (transpose d))) input0 delta_flat
     let grad_w          = map (\d -> map (R.sum) (transpose d)) (transpose grads_w)
-
     let grads_b         = map (\img -> map (\layer -> R.sum (flatten layer) ) img) delta
     let grad_b          = map (R.sum) (transpose grads_b)
+
+    let (w', b')        = apply_grads (w,b) (grad_w, grad_b)
 
     --- Calc error for previous layer ----
     let error' =
@@ -104,10 +103,7 @@ module conv2d (R:real) : layer with t = R.t
         let delta_col    = map (\d -> im2col d (k,k) delta_ix) delta_padded
         let error        = map (\x -> lalg.matmul (w_split) (x)) delta_col
         in map (\img -> map (\x -> (unflatten x_m x_n x)) img ) error
-    in (error' , (grad_w,grad_b))
-
-  let update (f:apply_grad t) (w:weights) (wg:weights) =
-    f w wg
+    in (error' , (w',b'))
 
   let init ((filters, kernel, stride, depth):input_params)  (act:activations)  (seed: i32)  =
     let w: arr2d  t  = (random.gen_random_array_2d_xavier_uni ((kernel* kernel * depth), filters) seed)
@@ -115,6 +111,5 @@ module conv2d (R:real) : layer with t = R.t
    in
     (forward act.1 (kernel,kernel) stride,
      backward act.2 kernel stride,
-     update,
      (w,b))
 }

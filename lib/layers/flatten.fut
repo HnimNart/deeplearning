@@ -13,7 +13,6 @@ module flatten (R:real) : layer with t = R.t
                                 with cache        = dims3d
                                 with error_in     = arr2d R.t
                                 with error_out    = arr4d R.t = {
-
   type t = R.t
   type input        = arr4d t
   type weights      = ()
@@ -35,7 +34,7 @@ module flatten (R:real) : layer with t = R.t
      let cache = if training then dims else empty_cache
      in (cache, map (\image -> flatten_3d image) input)
 
-  let backward (first_layer:bool) (_: weights) (input:cache) (error:error_in) : (error_out, weights) =
+  let backward  (first_layer:bool) (_:apply_grad t) (_: weights) (input:cache) (error:error_in) : (error_out, weights) =
     if first_layer then
       (empty_error, ())
     else
@@ -43,11 +42,8 @@ module flatten (R:real) : layer with t = R.t
       let retval  = map (\img -> unflatten_3d p m n img) error
       in (retval, ())
 
-  let update (_:apply_grad t) (_:weights) (_:weights)  = ()
-
   let init () () (_:i32) : flatten =
     (forward,
      backward,
-     update,
      ())
 }

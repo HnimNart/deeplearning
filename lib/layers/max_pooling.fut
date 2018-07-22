@@ -64,7 +64,7 @@ module max_pooling_2d (R:real) : layer with t = R.t
     let output  = map (\image -> map (\x -> map (\y -> map (\(_, r) -> r) y) x) image) res
     in (cache, output)
 
-  let backward ((m,n): (i32, i32)) (first_layer:bool) (_:weights) (indexs:cache) (error:error_in): (error_out, weights) =
+  let backward ((m,n): (i32, i32))  (first_layer:bool) (_:apply_grad t)  (_:weights) (indexs:cache) (error:error_in): (error_out, weights) =
     if first_layer then
       (empty_error, ())
     else
@@ -80,12 +80,10 @@ module max_pooling_2d (R:real) : layer with t = R.t
       map2 (\ix_img err_img -> map2 (\i e -> scatter (copy retval) i e) ix_img err_img) index_flat error_flat
     in (map (\image -> map (\x -> unflatten height width x) image) error', ())
 
-  let update (_:apply_grad t) (_:weights) (_:weights) : weights = ()
 
   let init ((m,n):(i32, i32)) (_:activations) (_: i32) : max_pool =
     (forward (m,n),
      backward (m,n),
-     update,
      ())
 
 }
