@@ -46,8 +46,8 @@ module flatten (R:real) : layer with t = R.t
   let update (_:apply_grad t) (_:weights) (_:weights)  = ()
 
   let init () () (_:i32) : flatten =
-    (forward,
-     backward,
-     update,
-     ())
+    {forward = forward,
+     backward = backward,
+     update = update,
+     weights = ()}
 }

@@ -40,26 +40,26 @@ module neural_network (R:real): network with t = R.t = {
 
   module act_funcs = activation_funcs R
 
-  let connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e  ((f1, b1, u1, ws1): NN i1 w1 o1 c1 e e1 (apply_grad t))
-                                                               ((f2, b2, u2, ws2): NN o1 w2 o2 c2 e2 e (apply_grad t))
-                                                               : NN i1 (w1,w2) (o2) (c1,c2) (e2) (e1) (apply_grad t) =
-
-    (\(training) (w1, w2) (input) ->
-                            let (c1, res)  = f1 training w1 input
-                            let (c2, res2) = f2 training w2 res
+  let connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e
+                     (nn1: NN i1 w1 o1 c1 e e1 (apply_grad t))
+                     (nn2: NN o1 w2 o2 c2 e2 e (apply_grad t))
+                      : NN i1 (w1,w2) (o2) (c1,c2) (e2) (e1) (apply_grad t) =
+    { forward = \(training) (w1, w2) (input) ->
+                            let (c1, res)  = nn1.forward training w1 input
+                            let (c2, res2) = nn2.forward training w2 res
                             in ((c1, c2), res2),
-     (\(_) (w1,w2) (c1,c2) (error) ->
-                            let (err2, w2') = b2 false w2 c2 error
-                            let (err1, w1') = b1 true w1 c1 err2
+     backward = (\(_) (w1,w2) (c1,c2) (error) ->
+                            let (err2, w2') = nn2.backward false w2 c2 error
+                            let (err1, w1') = nn1.backward true w1 c1 err2
                             in (err1, (w1', w2'))),
-     (\(f) (w1, w2) (wc1, wc2)  ->
-                            let w1' = u1 f w1 wc1
-                            let w2' = u2 f w2 wc2
+     update = (\(f) (w1, w2) (wc1, wc2)  ->
+                            let w1' = nn1.update f w1 wc1
+                            let w2' = nn2.update f w2 wc2
                             in (w1', w2')),
-     (ws1, ws2))
+     weights = (nn1.weights, nn2.weights)}
 
-  let predict  'i 'w 'g 'e1 'e2 'u 'o  ((f,_, _ ,w):NN ([]i) w ([]o) g e1 e2 u) (input:[]i) (classifier:activation_func o)  =
-    let (_, output) = f false w input
+  let predict  'i 'w 'g 'e1 'e2 'u 'o  (nn:NN ([]i) w ([]o) g e1 e2 u) (input:[]i) (classifier:activation_func o)  =
+    let (_, output) = nn.forward false nn.weights input
     in map (\o -> classifier.1 o) output
 
   let accuracy [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([]i) w ([]o) g e1 e2 u) (input:[d]i) (labels:[d]o)

@@ -3,10 +3,10 @@ type forwards   'input 'w 'output 'cache = bool -> w -> input -> (cache, output)
 type backwards  'c 'w  'err_in  'err_out = bool -> w -> c ->  err_in  -> (err_out, w)
 type update     'w '^f                   = f -> w -> w -> w
 
-type NN 'input 'w 'output 'c 'e_in 'e_out '^f = (forwards input w output c,
-                                                 backwards c w e_in e_out,
-                                                 update w f,
-                                                 w)
+type NN 'input 'w 'output 'c 'e_in 'e_out '^f = {forward: forwards input w output c,
+                                                 backward:backwards c w e_in e_out,
+                                                 update:update w f,
+                                                 weights:w}
 
 --- Commonly used types
 type arr1d 't = []t
