@@ -77,7 +77,6 @@ entry identity_derivative [d] (input:[d]f64) = act.Identity_1d.2 input
 -- output {[0.25949646034242f64, 0.70538451269824f64, 0.03511902695924f64]}
 entry softmax [d] (input:[d]f64) = act.Softmax_1d.1 input
 
-
 -- ==
 -- entry: softmax_derivative
 -- input {[3f64,4f64, 1f64]}
