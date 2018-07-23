@@ -83,9 +83,9 @@ module max_pooling_2d (R:real) : layer with t = R.t
   let update (_:apply_grad t) (_:weights) (_:weights) : weights = ()
 
   let init ((m,n):(i32, i32)) (_:activations) (_: i32) : max_pool =
-    (forward (m,n),
-     backward (m,n),
-     update,
-     ())
+    { forward = forward (m,n),
+     backward = backward (m,n),
+     update = update,
+     weights = ()}
 
 }

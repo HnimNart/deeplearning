@@ -20,7 +20,6 @@ module type layers = {
   type flatten_tp      =
     NN (arr4d t) () (arr2d t) dims3d (arr2d t) (arr4d t) (apply_grad t)
 
-
   -- Simple wrappers for each layer type
   val dense: (i32, i32) -> (f_pair_1d t) ->  i32 -> dense_tp
   val conv2d: (i32, i32, i32, i32) -> (f_pair_1d t) -> i32 -> conv2d_tp

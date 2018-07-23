@@ -36,7 +36,9 @@ module dense (R:real) : layer with t = R.t
   let empty_error:error_out = [[]]
 
   ---- Each input is in row
-  let forward  (act:[]t -> []t) (training:bool) ((w,b):weights) (input:input) : (cache, output) =
+  let forward  (act:[]t -> []t) (training:bool)
+               ((w,b):weights) (input:input) : (cache, output) =
+
     let res      = lalg.matmul w (transpose input)
     let res_bias = transpose (map2 (\xr b' -> map (\x -> (R.(x + b'))) xr) res b)
     let res_act  = map (\x -> act x) (res_bias)
@@ -66,9 +68,9 @@ module dense (R:real) : layer with t = R.t
     let w = random.gen_random_array_2d_xavier_uni (m,n) seed
     let b = map (\_ -> R.(i32 0)) (0..<n)
     in
-    (forward act.1,
-     backward act.2,
-     update,
-    (w,b))
+    {forward = forward act.1,
+     backward = backward act.2,
+     update = update,
+     weights = (w,b)}
 
 }
