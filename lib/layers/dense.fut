@@ -49,8 +49,10 @@ module dense (R:real) : layer with t = R.t
 
     let deriv            = (map (\x -> act x) inp_w_bias)
     let delta            = transpose (util.mult_matrix error deriv)
-    let w_grad           = lalg.matmul delta (input)
+    let w_grad           = lalg.matmul delta input
     let b_grad           = map (R.sum) delta
+
+    --- calc error to backprop to previous layer
     let error' =
       if first_layer
       then
