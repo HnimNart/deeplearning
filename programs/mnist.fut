@@ -15,5 +15,4 @@ let main [m][n][d] (input: [m][d]dl.t) (labels: [m][n]dl.t) =
   let batch_size = 64
   let alpha = 0.1
   let nn1 = dl.train.GradientDescent nn alpha input[:n] labels[:n] batch_size dl.loss.softmax_cross_entropy_with_logits
-  in nn1.4
-   -- in dl.nn.accuracy nn1 (input) (labels) dl.nn.softmax dl.nn.argmax
+   in dl.nn.accuracy nn1 (input) (labels) dl.nn.softmax dl.nn.argmax
