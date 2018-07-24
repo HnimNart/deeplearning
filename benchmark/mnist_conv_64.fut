@@ -17,11 +17,17 @@ let nn3   = dl.nn.connect_layers nn2 flat
 let nn4   = dl.nn.connect_layers nn3 fc
 let nn    = dl.nn.connect_layers nn4 output
 
+
+-- ==
+--
+-- tags { }
+-- input @ ../data/mnist_100000_f32.bindata
+
+
 let main [m][d][n] (input: [m][d]dl.t) (labels: [m][n]dl.t) =
   let input' = map (\img -> [unflatten 28 28 img]) input
   let n = 64000
-  let validation = 10000
-  let batch_size = 128
+  let batch_size = 64
   let alpha = 0.1
   let nn' = dl.train.GradientDescent nn alpha input'[:n] labels[:n] batch_size dl.loss.softmax_cross_entropy_with_logits
-  in dl.nn.accuracy nn' input'[n:n+validation] labels[n:n+validation] (dl.nn.softmax) (dl.nn.argmax)
+  in nn'.weights
