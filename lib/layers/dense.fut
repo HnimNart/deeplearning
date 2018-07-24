@@ -6,7 +6,7 @@ import "/futlib/linalg"
 
 module dense (R:real) : layer with t = R.t
                               with input_params = (i32, i32)
-                              with activations  = (f_pair_1d R.t)
+                              with activations  = activation_func ([]R.t)
                               with input        = arr2d R.t
                               with weights      = std_weights R.t
                               with output       = arr2d R.t
@@ -24,7 +24,7 @@ module dense (R:real) : layer with t = R.t
   type b_output     = (error_out, weights)
 
   type input_params = (i32, i32)
-  type activations  = f_pair_1d t
+  type activations  = activation_func ([]t)
 
   type dense_tp = NN input weights output cache error_in error_out (apply_grad t)
 

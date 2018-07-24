@@ -6,11 +6,11 @@ module type network = {
   type t
 
   --- activation function wrappers
-  val identity : f_pair_1d t
-  val sigmoid  : f_pair_1d t
-  val relu     : f_pair_1d t
-  val tanh     : f_pair_1d t
-  val softmax  : f_pair_1d t
+  val identity : activation_func ([]t)
+  val sigmoid  : activation_func ([]t)
+  val relu     : activation_func ([]t)
+  val tanh     : activation_func ([]t)
+  val softmax  : activation_func ([]t)
 
   --- helper functions for calculating accuracy
   val argmax : []t -> i32

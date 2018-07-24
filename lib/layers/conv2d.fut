@@ -6,7 +6,7 @@ import "/futlib/linalg"
 
 module conv2d (R:real) : layer with t = R.t
                                with input_params = (i32,i32, i32, i32)
-                               with activations  = f_pair_1d R.t
+                               with activations  = activation_func ([]R.t)
                                with input        = arr4d  R.t
                                with weights      = (arr2d R.t,arr1d R.t)
                                with output       = arr4d R.t
@@ -25,7 +25,7 @@ module conv2d (R:real) : layer with t = R.t
   type b_output     = (error_out, weights)
 
   type input_params = (i32 ,i32, i32, i32)
-  type activations  = f_pair_1d R.t
+  type activations  = activation_func ([]R.t)
 
   module lalg   = linalg R
   module util   = utility R
