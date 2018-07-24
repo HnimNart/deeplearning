@@ -19,10 +19,10 @@ module loss_funcs (R:real) : loss with t = R.t = {
 
   module activations = activation_funcs R
 
+  let epsilon:t = R.(i32 1/ i32 10000000)
+
   let cross_entropy_1d [d] (logits:[d]t) (labels:[d]t) =
-    let res = map2 (\x y -> if R.(isinf (log x))
-                            then R.(i32 0)
-                            else R.((log x) * y)) logits labels
+    let res = map2 (\x y -> R.((log (x + epsilon)) * y)) logits labels
     in R.(negate (sum res))
 
   let cross_entropy_1d' [d] (logits:[d]t) (labels:[d]t) =
