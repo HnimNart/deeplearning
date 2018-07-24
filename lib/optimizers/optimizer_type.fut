@@ -4,7 +4,6 @@ module type trainer = {
 
   type t
   type ^alpha
-  type loss_func 'o = {f:o -> o -> t, fd:o -> o -> o}
 
   -- | Train function with signature
   --   network -> learning_rate -> input data -> labels -> batch_size -> classifier
@@ -14,7 +13,7 @@ module type trainer = {
                               ([]i) ->
                               ([]o) ->
                               i32 ->
-                              loss_func o ->
+                              loss_func o t->
                               NN ([]i) w ([]o) g ([]o) e2 (apply_grad t)
 
 }

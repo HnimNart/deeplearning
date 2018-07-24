@@ -16,7 +16,7 @@ let conv = dl.layers.conv2d (2, 2, 1, 2) dl.nn.identity 1
 --            [[186.0, 222.0], [294.0, 330.0]]]]}
 
 entry conv2d_fwd data w b  =
-  let (_, output) = conv.1 false (w,b) data in output
+  let (_, output) = conv.forward false (w,b) data in output
 
 -- ==
 -- entry: conv2d_cache_dims
@@ -32,7 +32,7 @@ entry conv2d_fwd data w b  =
 --          3}
 
 entry conv2d_cache_dims data w b  =
-  let (cache, _) = conv.1 true (w,b) data in cache.1
+  let (cache, _) = conv.forward true (w,b) data in cache.1
 
 -- ==
 -- entry: conv2d_cache_bias
@@ -47,7 +47,7 @@ entry conv2d_cache_dims data w b  =
 --            [[186.0, 222.0], [294.0, 330.0]]]]}
 
 entry conv2d_cache_bias data w b  =
-  let (cache, _) = conv.1 true (w,b) data in cache.3
+  let (cache, _) = conv.forward true (w,b) data in cache.3
 
 -- ==
 -- entry: conv2d_cache_matrix
@@ -68,7 +68,7 @@ entry conv2d_cache_bias data w b  =
 --           [14.0, 15.0, 17.0, 18.0]]]}
 
 entry conv2d_cache_matrix data w b  =
-  let (cache, _) = conv.1 true (w,b) data in cache.2
+  let (cache, _) = conv.forward true (w,b) data in cache.2
 
 -- ==
 -- entry: conv2d_bwd_error
@@ -87,8 +87,8 @@ entry conv2d_cache_matrix data w b  =
 --             [3843.0, 8181.0,  4338.0]]]]}
 
 entry conv2d_bwd_error data w b  =
-  let (cache, output) = conv.1 true (w,b) data
-  let (err, _) = conv.2 false (w,b) cache output in err
+  let (cache, output) = conv.forward true (w,b) data
+  let (err, _) = conv.backward false (w,b) cache output in err
 
 -- ==
 -- entry: conv2d_bwd_dW
@@ -107,8 +107,8 @@ entry conv2d_bwd_error data w b  =
 --           16872.00]]}
 
 entry conv2d_bwd_dW data w b  =
-  let (cache, output) = conv.1 true (w,b) data
-  let (_, (w',_)) = conv.2 false (w,b) cache output in w'
+  let (cache, output) = conv.forward true (w,b) data
+  let (_, (w',_)) = conv.backward false (w,b) cache output in w'
 
 -- ==
 -- entry: conv2d_bwd_dB
@@ -122,5 +122,5 @@ entry conv2d_bwd_dW data w b  =
 -- output {[1716.0,1030.0]}
 
 entry conv2d_bwd_dB data w b  =
-  let (cache, output) = conv.1 true (w,b) data
-  let (_, (_,b')) = conv.2 false (w,b) cache output in b'
+  let (cache, output) = conv.forward true (w,b) data
+  let (_, (_,b')) = conv.backward false (w,b) cache output in b'

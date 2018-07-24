@@ -1,9 +1,40 @@
 import "nn_types"
-import "activations_funcs"
+import "activation_funcs"
 
 module type network = {
 
   type t
+
+  --- Combines two networks into one
+  val connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e22:
+                      NN i1 w1 o1 c1 e22 e1 (apply_grad t) ->
+                      NN o1 w2 o2 c2 e2 e22 (apply_grad t) ->
+                      NN i1 (w1, w2) (o2) (c1,c2) (e2) (e1) (apply_grad t)
+
+  --- Performs predictions on data set given a network,
+  --- input data and classifier
+  val predict 'w 'g 'i 'e1 'e2 '^u 'o  : NN ([]i) (w) ([]o) g e1 e2 u ->
+                                         []i ->
+                                         activation_func o ->
+                                         []o
+
+  --- Calculates the accuracy given a network, input,
+  --- labels and classifier
+  val accuracy 'w 'g 'e1 'e2 'i '^u 'o : NN ([]i)  w  ([]o) g e1 e2 u ->
+                                         []i ->
+                                         []o ->
+                                         activation_func o ->
+                                         (o -> i32) ->
+                                         t
+
+  --- Calculates the absolute loss given a network, input, labels,
+  --- a loss function and classifier aka activation func
+  val loss 'w 'g 'e1 'e2 '^u 'i 'o : NN ([]i) w ([]o) g e1 e2 u ->
+                                     []i ->
+                                     []o ->
+                                     loss_func o t ->
+                                     activation_func o ->
+                                     t
 
   --- activation function wrappers
   val identity : activation_func ([]t)
@@ -16,34 +47,6 @@ module type network = {
   val argmax : []t -> i32
   val argmin : []t -> i32
 
-  --- Combines two networks into one
-  val connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e22:
-                      NN i1 w1 o1 c1 e22 e1 (apply_grad t) ->
-                      NN o1 w2 o2 c2 e2 e22 (apply_grad t) ->
-                      NN i1 (w1, w2) (o2) (c1,c2) (e2) (e1) (apply_grad t)
-
-  --- Performs predictions on data set given a network, input data and classifier
-  val predict 'w 'g 'i 'e1 'e2 '^u 'o  : NN ([]i) (w) ([]o) g e1 e2 u ->
-                                         []i ->
-                                         activation_func o ->
-                                         []o
-
-  --- Calculates the accuracy given a network, input, labels and classifier
-  val accuracy 'w 'g 'e1 'e2 'i '^u 'o : NN ([]i)  w  ([]o) g e1 e2 u ->
-                                         []i ->
-                                         []o ->
-                                         activation_func o ->
-                                         (o -> i32) ->
-                                         t
-
-  --- Calculates the absolute loss given a network, input, labels,
-  --- a loss function and classifier
-  val loss 'w 'g 'e1 'e2 '^u 'i 'o : NN ([]i) w ([]o) g e1 e2 u ->
-                                     []i ->
-                                     []o ->
-                                     loss_func o t ->
-                                     activation_func o ->
-                                     t
 }
 
 module neural_network (R:real): network with t = R.t = {
@@ -92,11 +95,10 @@ module neural_network (R:real): network with t = R.t = {
                                           (classification:activation_func o)
                                           (f: o -> i32) : t =
 
-    let predictions          = predict nn input classification
-    let argmax_labels        = map (\x -> f x) labels
-    let argmax_predictions   = map (\x -> f x) predictions
-    let total                = reduce (+) 0 (map2 (\x y -> if x == y then 1 else 0)
-                                             argmax_labels argmax_predictions)
+    let predictions  = predict nn input classification
+    let argmaxs      = map2 (\x y -> (f x,f y)) labels predictions
+    let total        = reduce (+) 0 (map (\(x,y) -> i32.bool (x == y))
+                                             argmaxs)
     in R.(i32 total / i32 d)
 
 

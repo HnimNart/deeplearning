@@ -1,17 +1,15 @@
-import "optimizer_types"
+import "optimizer_type"
 import "../nn_types"
 import "../util"
 
 
-
 -- | Plain vanilla gradient descent optimizer
---   with mean gradient
+--   with mean gradient and constant learning rate
 module GradientDescent (R:real) : trainer with t = R.t
                                           with alpha = R.t = {
 
   type t = R.t
   type alpha = t
-  type loss_func 'o = {f:o -> o -> t, fd:o -> o -> o}
 
   module util = utility R
 
@@ -28,6 +26,7 @@ module GradientDescent (R:real) : trainer with t = R.t
 
       let w'        = util.sub_matrix w wg_scaled
       let b'        = util.sub_v b bg_scaled
+
     in (w', b')
 
   let train [n] 'w 'g 'o 'e2 'i ({forward=f,
@@ -38,7 +37,7 @@ module GradientDescent (R:real) : trainer with t = R.t
                                 (input:[n]i)
                                 (labels:[n]o)
                                 (batch_sz: i32)
-                                ({f=_, fd=loss'}:loss_func o) =
+                                ({f=_, fd=loss'}:loss_func o t) =
 
     let i = 0
     let (w',_) = loop (w, i) while i < length input do

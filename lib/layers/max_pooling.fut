@@ -4,7 +4,6 @@ import "/futlib/linalg"
 import "../util"
 
 
-
 module max_pooling_2d (R:real) : layer with t = R.t
                                        with input_params = (i32 , i32)
                                        with activations = ()
@@ -42,7 +41,7 @@ module max_pooling_2d (R:real) : layer with t = R.t
                         else i)
                         0 (iota (length inp_flat))
     let (i,j)    = (argmax / n, argmax % n )
-    in ((i,j), inp_flat[argmax])
+    in ((i,j), unsafe inp_flat[argmax])
 
 
   --- Forward propegate
@@ -50,26 +49,25 @@ module max_pooling_2d (R:real) : layer with t = R.t
               (training:bool)
               (_:weights)
               (input:input) : (cache, output) =
+
     let (input_m, input_n)    = (length input[0,0], length input[0,0,0])
     let (output_m, output_n)  = (input_m/w_m, input_n/w_n)
     let ixs = map (\x -> x * w_m) (0..<output_m)
     let jxs = map (\x -> x * w_n) (0..<output_n)
-    let res =
-      unsafe map (\image ->
-                  map (\layer ->
-                       map (\i ->
-                            map (\j -> let ((i',j'), res) = max_val layer[i:i+w_m,j:j+w_n]
-                                       let offset = (input_m * (i'+i) + (j'+j))
-                                       in (offset, res)) jxs) ixs) image) input
+    let (idx, output) =
+      unzip (map (\image ->
+         unzip (map (\layer ->
+               unzip (map (\i ->
+                      unzip (map (\j ->
+                            let slice = unsafe layer[i:i+w_m, j:j+w_n]
+                            let ((i',j'), res) = max_val slice
+                            let offset = (input_m * (i'+i) + (j'+j))
+                            in (offset, res)) jxs)) ixs)) image)) input)
 
-    let cache   = if training then
-                    map (\image ->
-                         map (\layer ->
-                              map (\row ->
-                                   map (\(is, _) -> is) row) layer) image) res
-                  else empty_cache
-    let output  =
-      map (\image -> map (\x -> map (\y -> map (\(_, r) -> r) y) x) image) res
+    let cache = if training then
+                 idx
+                 else
+                 empty_cache
     in (cache, output)
 
   -- Back propegate
@@ -82,14 +80,14 @@ module max_pooling_2d (R:real) : layer with t = R.t
     if first_layer then
       (empty_error, ())
     else
-     --- Recreate dimensions
+      --- Recreate dimensions and create buffers
       let (layer_m, layer_n) = (length idx[0,0], length idx[0,0,0])
-      let height       = layer_m * m
-      let width        = layer_n * n
-      let total_elem   = height * width
-      let retval       = map (\_ -> R.(i32 0)) (0..<(total_elem))
-      let idx_flat = map (\image -> map (\layer -> flatten layer) image) idx
-      let error_flat   = map (\image -> map (\layer -> flatten layer) image) error
+      let (height, width)    = (layer_m * m , layer_n * n)
+      let total_elem         = height * width
+      let retval             = map (\_ -> R.(i32 0)) (0..<(total_elem))
+      let idx_flat           = map (\image -> map (\layer -> flatten layer) image) idx
+      let error_flat         = map (\image -> map (\layer -> flatten layer) image) error
+      --- Write values back to their place
       let error'       =
         map2 (\ix_img err_img ->
               map2 (\i e ->

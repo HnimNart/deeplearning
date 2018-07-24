@@ -55,12 +55,12 @@ module conv2d (R:real) : layer with t = R.t
     in unflatten output_m output_n retval
 
     --- Transforms img convolution to column matrix
-    let im2col (x:arr3d t)
-               ((w_m, w_n):(i32, i32))
-               (idx:arr1d  (i32, i32)) : arr2d t =
+  let im2col (x:arr3d t)
+             ((w_m, w_n):(i32, i32))
+             (idx:arr1d  (i32, i32)) : arr2d t =
     unsafe transpose (map (\(i,j) ->
-                           flatten (map (\layer ->
-                                         flatten layer[i:i+w_m, j:j+w_n]) x)) idx)
+                          flatten (map (\layer ->
+                                       flatten layer[i:i+w_m, j:j+w_n]) x)) idx)
 
   let forward (act:[]t -> []t)
               ((w_m, w_n):(i32, i32))
@@ -84,14 +84,16 @@ module conv2d (R:real) : layer with t = R.t
                               map (\inp ->
                                    map (\x ->
                                         unflatten out_m out_n x) inp) res_bias
-                          in ((x_p, x_m, x_n), image_matrix, res_bias')
+                            in ((x_p, x_m, x_n), image_matrix, res_bias')
                           else empty_cache
     let output = map (\inp -> map (\x -> unflatten out_m out_n x) inp) res_act
     in (cache, output)
 
 
-  let backward (act:[]t->[]t) (k:i32)
-               (stride:i32) (first_layer:bool)
+  let backward (act:[]t->[]t)
+               (k:i32)
+               (stride:i32)
+               (first_layer:bool)
                ((w,_): weights)
                ((dims, img_matrix, res_bias):cache)
                (error:error_in) : b_output =
@@ -137,9 +139,12 @@ module conv2d (R:real) : layer with t = R.t
   let update (f:apply_grad t) (w:weights) (wg:weights) =
     f w wg
 
-  let init ((filters, kernel, stride, depth):input_params)  (act:activations)  (seed: i32)  =
-    let w: arr2d  t  = (random.gen_random_array_2d_xavier_uni ((kernel* kernel * depth), filters) seed)
-    let b: arr1d  t  = map (\_ -> R.(i32 0)) (0..<filters)
+  let init ((filters, kernel, stride, depth):input_params)
+           (act:activations)
+           (seed: i32)  =
+    let w: arr2d t =
+      random.gen_random_array_2d_xavier_uni ((kernel* kernel * depth), filters) seed
+    let b: arr1d t = replicate filters R.(i32 0)
     in
     {forward  = forward act.f (kernel,kernel) stride,
      backward = backward act.fd kernel stride,

@@ -1,4 +1,4 @@
-import "../lib/activations"
+import "../lib/activations_funcs"
 
 module act = activation_funcs f64
 
@@ -16,7 +16,7 @@ module act = activation_funcs f64
 --          5.639354659169356f64, 0.10718960311773174f64,
 --          0.00000000000000f64,  7.693139343115941f64]}
 
-entry relu [d] (input:[d]f64) = act.Relu_1d.1 input
+entry relu [d] (input:[d]f64) = act.Relu_1d.f input
 
 -- ==
 -- entry: relu_derivative
@@ -32,53 +32,52 @@ entry relu [d] (input:[d]f64) = act.Relu_1d.1 input
 --          1.00000000000000f64, 1.00000000000000f64,
 --          0.00000000000000f64, 1.00000000000000f64] }
 
-entry relu_derivative [d] (input:[d]f64) = act.Relu_1d.2 input
+entry relu_derivative [d] (input:[d]f64) = act.Relu_1d.fd input
 
 -- ==
 -- entry: sigmoid
 -- input  { [0.458f64] }
 -- output { [0.61253961344091512f64] }
-entry sigmoid [d] (input:[d]f64) = act.Sigmoid_1d.1 input
+entry sigmoid [d] (input:[d]f64) = act.Sigmoid_1d.f input
 
 -- ==
 -- entry: sigmoid_derivative
 -- input  { [0.5f64, 0.0f64]}
 -- output { [0.2350037122015945f64, 0.25f64] }
-entry sigmoid_derivative [d] (input:[d]f64)  = act.Sigmoid_1d.2 input
+entry sigmoid_derivative [d] (input:[d]f64)  = act.Sigmoid_1d.fd input
 
 -- ==
 -- entry: tanh
 -- input  {[ 0.1f64, 1.0f64, -0.1f64 ]}
 -- output {[0.099668f64, 0.761594f64, -0.099668f64 ]}
-entry tanh [d] (input:[d]f64) = act.Tanh_1d.1 input
+entry tanh [d] (input:[d]f64) = act.Tanh_1d.f input
 
 -- ==
 -- entry: tanh_derivative
 -- input {[ 0.1f64, 1.0f64, -0.5f64, 0.0f64 ]}
 -- output {[0.990066f64, 0.419974f64, 0.786448f64, 1.000000f64]}
-entry tanh_derivative [d] (input:[d]f64) = act.Tanh_1d.2 input
-
+entry tanh_derivative [d] (input:[d]f64) = act.Tanh_1d.fd input
 
 -- ==
 -- entry: identity
 -- input {[1f64, 3f64, -1f64]}
 -- output {[1f64, 3f64, -1f64]}
-entry identity [d] (input:[d]f64) = act.Identity_1d.1 input
+entry identity [d] (input:[d]f64) = act.Identity_1d.f input
 
 -- ==
 -- entry: identity_derivative
 -- input {[1f64, 3f64, -1f64]}
 -- output {[1f64, 1f64, 1f64]}
-entry identity_derivative [d] (input:[d]f64) = act.Identity_1d.2 input
+entry identity_derivative [d] (input:[d]f64) = act.Identity_1d.fd input
 
 -- ==
 -- entry: softmax
 -- input {[3f64,4f64, 1f64]}
 -- output {[0.25949646034242f64, 0.70538451269824f64, 0.03511902695924f64]}
-entry softmax [d] (input:[d]f64) = act.Softmax_1d.1 input
+entry softmax [d] (input:[d]f64) = act.Softmax_1d.f input
 
--- ==
+-- BROKEN! isn't correct
 -- entry: softmax_derivative
 -- input {[3f64,4f64, 1f64]}
 -- output {[0.192158047412, 0.207817201944f64, 0.033885680905f64]}
-entry softmax_derivative [d] (input:[d]f64) = act.Softmax_1d.2 input
+-- entry softmax_derivative [d] (input:[d]f64) = act.Softmax_1d.fd input

@@ -1,6 +1,6 @@
 import "../lib/deep_learning"
 module dl = deep_learning f32
-let seed = 2
+let seed = 1
 
 let conv1     = dl.layers.conv2d (32, 5, 1, 1) dl.nn.relu seed
 let max_pool1 = dl.layers.max_pooling2d (2,2)

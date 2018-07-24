@@ -1,35 +1,32 @@
 import "util"
 import "nn_types"
 
--- | Activation functions are defined as a tuple
+-- | Activation functions are defined as a record
 --   of two function i.e.
---   1. The function itself and
---   2. it's derivative
+--   1. The function, f, and
+--   2. it's derivative, fd
 module type activations = {
 
   type t
 
-  type ^act_pair_1d
-  val Identity_1d: act_pair_1d
-  val Sigmoid_1d: act_pair_1d
-  val Relu_1d: act_pair_1d
-  val Tanh_1d: act_pair_1d
-  val Softmax_1d: act_pair_1d
+  val Identity_1d: activation_func ([]t)
+  val Sigmoid_1d:  activation_func ([]t)
+  val Relu_1d:     activation_func ([]t)
+  val Tanh_1d:     activation_func ([]t)
+  val Softmax_1d:  activation_func ([]t)
 
 }
 
-module activation_funcs (R:real) : activations with t = R.t
-                                               with act_pair_1d = activation_func ([]R.t) = {
+module activation_funcs (R:real) : activations with t = R.t = {
   type t = R.t
-  type act_pair_1d = activation_func ([]t)
 
   module util = utility R
 
   let identity_1d (X:[]t) : []t  =
     X
 
-  let identity_1d' [m] (X:[m]t) : [m]t =
-    map (\_ -> R.(i32 1)) X
+  let identity_1d' [m] (_:[m]t) : [m]t =
+    map (\_ -> R.(i32 1)) (0..<m)
 
   let sigmoid_1d (X:[]t) : []t =
     map (\x -> R.(i32 1/(i32 1 + exp (negate x)))) X
@@ -52,23 +49,25 @@ module activation_funcs (R:real) : activations with t = R.t
   let softmax_1d_stable (X:[]t) =
     let maxval = R.maximum X
     let exps = map (\x -> R.(exp (x - maxval))) X
-    let sumexps = R.(reduce (+) R.(i32 0) exps)
-    in  map (\x -> R.(x / sumexps)) exps
+    let sumexps = R.sum exps
+    in  map (R.((/sumexps))) exps
 
+  -- Broken! Don't use this!
+  -- Correct return val is 'retval'
+  -- But is a matrix not an array
   let softmax_1d_stable' (X:[]t) =
     let softmax_res = softmax_1d_stable X
     let outer_prod  = map (\x -> map (\y -> R.(x * y)) softmax_res ) softmax_res
     let diagSoft    = util.diag softmax_res
-    let matrix      = map2 (\xr yr -> map2 (\x y -> R.(x - y)) xr yr ) diagSoft outer_prod
-    in  map (R.sum) (matrix)
+    let retval      = map2 (\xr yr -> map2 (\x y -> R.(x - y)) xr yr ) diagSoft outer_prod
+    in map (R.sum) (retval)
 
-  ----- Collections --------
+  --- Wrappers for activations function pairs ---
   let Identity_1d  =
     {f = identity_1d, fd = identity_1d'}
 
   let Sigmoid_1d =
     {f = sigmoid_1d, fd = sigmoid_1d'}
-
 
   let Relu_1d =
     {f = relu_1d, fd = relu_1d'}
