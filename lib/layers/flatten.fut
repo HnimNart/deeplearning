@@ -35,19 +35,23 @@ module flatten (R:real) : layer with t = R.t
      let cache = if training then dims else empty_cache
      in (cache, map (\image -> flatten_3d image) input)
 
-  let backward (first_layer:bool) (_: weights) (input:cache) (error:error_in) : (error_out, weights) =
+  let backward (first_layer:bool)
+               (_: weights)
+               (input:cache)
+               (error:error_in) : (error_out, weights) =
+
     if first_layer then
       (empty_error, ())
     else
       let (p,m,n) = input
-      let retval  = map (\img -> unflatten_3d p m n img) error
-      in (retval, ())
+      let error' = map (\img -> unflatten_3d p m n img) error
+      in (error', ())
 
   let update (_:apply_grad t) (_:weights) (_:weights)  = ()
 
   let init () () (_:i32) : flatten =
-    {forward = forward,
+    {forward  = forward,
      backward = backward,
-     update = update,
-     weights = ()}
+     update   = update,
+     weights  = ()}
 }

@@ -15,10 +15,10 @@ module deep_learning (R:real) : {
   module train  : optimizers with t = R.t
 
   module activation : activations with t = R.t
-                                  with act_pair_1d = f_pair_1d R.t
+                                  with act_pair_1d = activation_func ([]R.t)
 
   module loss: loss with t = R.t
-                    with loss_1d      = loss_pair_1d R.t
+                    with loss_1d      = loss_func ([]R.t) R.t
 } = {
 
   type t = R.t

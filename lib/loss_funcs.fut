@@ -1,7 +1,7 @@
 import "activations_funcs"
 import "nn_types"
 
--- | loss functions are defined as a tuple
+-- | Loss functions are defined as a record
 --   of two function i.e.
 --   1. The function itself and
 --   2. it's derivative w.r.t. to logits
@@ -16,10 +16,10 @@ module type loss = {
 }
 
 module loss_funcs (R:real) : loss with t = R.t
-                                  with loss_1d = loss_pair_1d R.t = {
+                                  with loss_1d = loss_func ([]R.t) R.t = {
 
   type t = R.t
-  type loss_1d = loss_pair_1d t
+  type loss_1d = loss_func ([]t) t
 
   module activations = activation_funcs R
 
@@ -33,11 +33,11 @@ module loss_funcs (R:real) : loss with t = R.t
     map2 (\x y -> R.(negate y / x)  ) logits labels
 
   let softmax_cross_entropy_with_logits_stable_1d [d] (logits:[d]t) (labels:[d]t) =
-    let softmax_res = activations.Softmax_1d.1 logits
+    let softmax_res = activations.Softmax_1d.f logits
     in cross_entropy_1d softmax_res labels
 
   let softmax_cross_entropy_with_logits_stable_1d' [d] (logits:[d]t) (labels:[d]t) =
-    let softmax_res = activations.Softmax_1d.1 logits
+    let softmax_res = activations.Softmax_1d.f logits
     in map2 (\x y -> R.(y - x)) labels softmax_res
 
   let sum_of_squares_error_1d [d] (logits:[d]t) (labels:[d]t) =
@@ -48,12 +48,12 @@ module loss_funcs (R:real) : loss with t = R.t
       map2 (\x y -> R.(x - y)) logits labels
 
   let sum_of_squares_error =
-    (sum_of_squares_error_1d, sum_of_squares_error_1d')
+    {f = sum_of_squares_error_1d, fd = sum_of_squares_error_1d'}
 
   let softmax_cross_entropy_with_logits =
-    (softmax_cross_entropy_with_logits_stable_1d, softmax_cross_entropy_with_logits_stable_1d')
+    {f = softmax_cross_entropy_with_logits_stable_1d, fd = softmax_cross_entropy_with_logits_stable_1d'}
 
   let cross_entropy =
-    (cross_entropy_1d, cross_entropy_1d')
+    {f = cross_entropy_1d, fd = cross_entropy_1d'}
 
 }

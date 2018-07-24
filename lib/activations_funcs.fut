@@ -19,9 +19,9 @@ module type activations = {
 }
 
 module activation_funcs (R:real) : activations with t = R.t
-                                               with act_pair_1d = f_pair_1d R.t = {
+                                               with act_pair_1d = activation_func ([]R.t) = {
   type t = R.t
-  type act_pair_1d = f_pair_1d t
+  type act_pair_1d = activation_func ([]t)
 
   module util = utility R
 
@@ -62,25 +62,21 @@ module activation_funcs (R:real) : activations with t = R.t
     let matrix      = map2 (\xr yr -> map2 (\x y -> R.(x - y)) xr yr ) diagSoft outer_prod
     in  map (R.sum) (matrix)
 
-
------ Collections --------
+  ----- Collections --------
   let Identity_1d  =
-    (identity_1d, identity_1d')
-
+    {f = identity_1d, fd = identity_1d'}
 
   let Sigmoid_1d =
-    (sigmoid_1d, sigmoid_1d')
+    {f = sigmoid_1d, fd = sigmoid_1d'}
 
 
   let Relu_1d =
-    (relu_1d, relu_1d')
+    {f = relu_1d, fd = relu_1d'}
 
   let Tanh_1d =
-    (tanh_1d, tanh_1d')
-
+    {f = tanh_1d, fd = tanh_1d'}
 
   let Softmax_1d =
-    (softmax_1d_stable, softmax_1d_stable')
-
+    {f = softmax_1d_stable, fd = softmax_1d_stable'}
 
 }

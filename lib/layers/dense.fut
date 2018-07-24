@@ -35,9 +35,12 @@ module dense (R:real) : layer with t = R.t
   let empty_cache:cache= ([[]],[[]])
   let empty_error:error_out = [[]]
 
-  ---- Each input is in row
-  let forward  (act:[]t -> []t) (training:bool)
-               ((w,b):weights) (input:input) : (cache, output) =
+
+  -- Forward propagation
+  let forward  (act:[]t -> []t)
+               (training:bool)
+               ((w,b):weights)
+               (input:input) : (cache, output) =
 
     let res      = lalg.matmul w (transpose input)
     let res_bias = transpose (map2 (\xr b' -> map (\x -> (R.(x + b'))) xr) res b)
@@ -45,16 +48,19 @@ module dense (R:real) : layer with t = R.t
     let cache    = if training then (input, res_bias) else empty_cache
     in (cache, res_act)
 
-  let backward (act:[]t -> []t) (first_layer:bool) ((w,_):weights)
-                                ((input, inp_w_bias):cache)
-                                (error:error_in) : b_output =
+  -- Backward propagation
+  let backward (act:[]t -> []t)
+               (first_layer:bool)
+               ((w,_):weights)
+               ((input, inp_w_bias):cache)
+               (error:error_in) : b_output =
 
-    let deriv            = (map (\x -> act x) inp_w_bias)
-    let delta            = transpose (util.mult_matrix error deriv)
-    let w_grad           = lalg.matmul delta input
-    let b_grad           = map (R.sum) delta
+    let deriv  = (map (\x -> act x) inp_w_bias)
+    let delta  = transpose (util.mult_matrix error deriv)
+    let w_grad = lalg.matmul delta input
+    let b_grad = map (R.sum) delta
 
-    --- calc error to backprop to previous layer
+    --- Calc error to backprop to previous layer
     let error' =
       if first_layer
       then
@@ -70,9 +76,9 @@ module dense (R:real) : layer with t = R.t
     let w = random.gen_random_array_2d_xavier_uni (m,n) seed
     let b = map (\_ -> R.(i32 0)) (0..<n)
     in
-    {forward = forward act.1,
-     backward = backward act.2,
-     update = update,
-     weights = (w,b)}
+    {forward  = forward act.f,
+     backward = backward act.fd,
+     update   = update,
+     weights  = (w,b)}
 
 }
