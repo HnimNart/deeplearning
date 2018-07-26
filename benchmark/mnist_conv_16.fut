@@ -20,13 +20,14 @@ let nn    = dl.nn.connect_layers nn4 output
 
 -- ==
 --
--- tags { }
+-- tags { futhark-opencl }
 -- input @ ../data/mnist_100000_f32.bindata
 
-let main [m][d][n] (input: [m][d]dl.t) (labels: [m][n]dl.t) =
+let main [m] (input: [m][]dl.t) (labels: [m][]dl.t) =
   let input' = map (\img -> [unflatten 28 28 img]) input
   let n = 64000
   let batch_size = 16
-  let alpha = 0.1
-  let nn' = dl.train.GradientDescent nn alpha input'[:n] labels[:n] batch_size dl.loss.softmax_cross_entropy_with_logits
+  let alpha = 0.01
+  let nn' = dl.train.gradient_descent nn alpha input'[:n]
+            labels[:n] batch_size dl.loss.softmax_cross_entropy_with_logits
   in nn'.weights

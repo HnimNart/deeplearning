@@ -29,7 +29,7 @@ module normal_random_array (R:real) : random_generator
 
   let gen_random_array_2d_xavier_uni ((m,n):(i32, i32)) (seed:i32) : [][]t =
     let d = R.(((sqrt((i32 6)) / sqrt(i32 n + i32 m))) )
-    let arr = gen_random_array_uni (m*n) ( R.(negate d),d) seed
+    let arr = gen_random_array_uni (m*n) (R.(negate d),d) seed
     in unflatten n m arr
 
   --- Using xavier norm initialize

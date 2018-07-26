@@ -5,7 +5,7 @@ import "../util"
 
 -- | Plain vanilla gradient descent optimizer
 --   with mean gradient and constant learning rate
-module GradientDescent (R:real) : trainer with t = R.t
+module gradient_descent (R:real) : trainer with t = R.t
                                           with alpha = R.t = {
 
   type t = R.t
