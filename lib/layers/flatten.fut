@@ -1,18 +1,16 @@
 import "../nn_types"
 import "layer_type"
-import "/futlib/linalg"
-import "../util"
 
 
-module flatten (R:real) : layer with t = R.t
-                                with input_params = ()
-                                with activations  = ()
-                                with input        = arr4d R.t
-                                with weights      = ()
-                                with output       = arr2d R.t
-                                with cache        = dims3d
-                                with error_in     = arr2d R.t
-                                with error_out    = arr4d R.t = {
+module flatten (R:real) : layer_type with t = R.t
+                                     with input_params = ()
+                                     with activations  = ()
+                                     with input        = arr4d R.t
+                                     with weights      = ()
+                                     with output       = arr2d R.t
+                                     with cache        = dims3d
+                                     with error_in     = arr2d R.t
+                                     with error_out    = arr4d R.t = {
 
   type t = R.t
   type input        = arr4d t

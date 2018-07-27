@@ -50,10 +50,12 @@ module utility (R:real) : {
   let scale_matrix [m][n] (X: [m][n]t) (s:t) : [m][n]t =
     map (\x -> scale_v x s) X
 
-  let mult_matrix_3d  [m][n][d] (X: [m][n][d]t) (Y:[m][n][d]t) : [m][n][d]t =
+  let mult_matrix_3d  [m][n][d] (X: [m][n][d]t)
+                                (Y:[m][n][d]t) : [m][n][d]t =
     map2 (\x y -> mult_matrix x y) X Y
 
-  let mult_matrix_4d  [m][n][p][q] (X: [m][n][p][q]t) (Y:[m][n][p][q]t) : [m][n][p][q]t =
+  let mult_matrix_4d  [m][n][p][q] (X: [m][n][p][q]t)
+                                   (Y:[m][n][p][q]t) : [m][n][p][q]t =
     map2 (\x y -> mult_matrix_3d x y) X Y
 
 

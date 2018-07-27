@@ -4,15 +4,15 @@ import "../util"
 import "../random_gen"
 import "/futlib/linalg"
 
-module dense (R:real) : layer with t = R.t
-                              with input_params = (i32, i32)
-                              with activations  = activation_func ([]R.t)
-                              with input        = arr2d R.t
-                              with weights      = std_weights R.t
-                              with output       = arr2d R.t
-                              with cache        = (arr2d R.t, arr2d R.t)
-                              with error_in     = arr2d R.t
-                              with error_out    = arr2d R.t = {
+module dense (R:real) : layer_type with t = R.t
+                                   with input_params = (i32, i32)
+                                   with activations  = activation_func ([]R.t)
+                                   with input        = arr2d R.t
+                                   with weights      = std_weights R.t
+                                   with output       = arr2d R.t
+                                   with cache        = (arr2d R.t, arr2d R.t)
+                                   with error_in     = arr2d R.t
+                                   with error_out    = arr2d R.t = {
 
   type t            = R.t
   type input        = arr2d t
@@ -26,7 +26,8 @@ module dense (R:real) : layer with t = R.t
   type input_params = (i32, i32)
   type activations  = activation_func ([]t)
 
-  type dense_tp = NN input weights output cache error_in error_out (apply_grad t)
+  type dense_tp = NN input weights output
+                     cache error_in error_out (apply_grad t)
 
   module lalg   = linalg R
   module util   = utility R

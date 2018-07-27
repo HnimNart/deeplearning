@@ -18,6 +18,7 @@ module type activations = {
 }
 
 module activation_funcs (R:real) : activations with t = R.t = {
+
   type t = R.t
 
   module util = utility R
@@ -41,7 +42,8 @@ module activation_funcs (R:real) : activations with t = R.t = {
     map (\x -> R.(if x <= i32 0 then i32 0 else i32 1)) X
 
   let tanh_1d (X:[]t) : []t =
-    map (\x -> R.((exp x - exp(negate x)) / ((exp x) + exp (negate x)))) X
+    map (\x ->
+         R.((exp x - exp(negate x)) / ((exp x) + exp (negate x)))) X
 
   let tanh_1d' (X:[]t) : []t =
     map (\x -> R.(i32 1 - x**(i32 2))) (tanh_1d X)
@@ -57,9 +59,11 @@ module activation_funcs (R:real) : activations with t = R.t = {
   -- But is a matrix not an array
   let softmax_1d_stable' (X:[]t) =
     let softmax_res = softmax_1d_stable X
-    let outer_prod  = map (\x -> map (\y -> R.(x * y)) softmax_res ) softmax_res
+    let outer_prod  =
+      map (\x -> map (\y -> R.(x * y)) softmax_res ) softmax_res
     let diagSoft    = util.diag softmax_res
-    let retval      = map2 (\xr yr -> map2 (\x y -> R.(x - y)) xr yr ) diagSoft outer_prod
+    let retval      =
+      map2 (\xr yr -> map2 (\x y -> R.(x - y)) xr yr ) diagSoft outer_prod
     in map (R.sum) (retval)
 
   --- Wrappers for activations function pairs ---

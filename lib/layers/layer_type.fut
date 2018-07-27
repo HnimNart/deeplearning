@@ -1,7 +1,7 @@
 import "../nn_types"
 
 
-module type layer = {
+module type layer_type = {
 
   type t
 

@@ -4,15 +4,15 @@ import "../util"
 import "../random_gen"
 import "/futlib/linalg"
 
-module conv2d (R:real) : layer with t = R.t
-                               with input_params = (i32,i32, i32, i32)
-                               with activations  = activation_func ([]R.t)
-                               with input        = arr4d  R.t
-                               with weights      = (arr2d R.t,arr1d R.t)
-                               with output       = arr4d R.t
-                               with cache        = (dims3d, arr3d R.t, arr4d R.t)
-                               with error_in     = arr4d R.t
-                               with error_out    = arr4d R.t = {
+module conv2d (R:real) : layer_type with t = R.t
+                                    with input_params = (i32,i32, i32, i32)
+                                    with activations  = activation_func ([]R.t)
+                                    with input        = arr4d  R.t
+                                    with weights      = (arr2d R.t,arr1d R.t)
+                                    with output       = arr4d R.t
+                                    with cache        = (dims3d, arr3d R.t, arr4d R.t)
+                                    with error_in     = arr4d R.t
+                                    with error_out    = arr4d R.t = {
 
   type t = R.t
   type input        = arr4d  t

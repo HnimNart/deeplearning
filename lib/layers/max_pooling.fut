@@ -1,18 +1,16 @@
 import "../nn_types"
 import "layer_type"
-import "/futlib/linalg"
-import "../util"
 
 
-module max_pooling_2d (R:real) : layer with t = R.t
-                                       with input_params = (i32 , i32)
-                                       with activations = ()
-                                       with input        = arr4d R.t
-                                       with weights      = ()
-                                       with output       = arr4d R.t
-                                       with cache        = arr4d (i32)
-                                       with error_in     = arr4d R.t
-                                       with error_out    = arr4d R.t = {
+module max_pooling_2d (R:real) : layer_type with t = R.t
+                                            with input_params = (i32 , i32)
+                                            with activations = ()
+                                            with input        = arr4d R.t
+                                            with weights      = ()
+                                            with output       = arr4d R.t
+                                            with cache        = arr4d (i32)
+                                            with error_in     = arr4d R.t
+                                            with error_out    = arr4d R.t = {
 
   type t = R.t
   type input        = arr4d t
@@ -25,9 +23,10 @@ module max_pooling_2d (R:real) : layer with t = R.t
 
   type input_params = (i32, i32)
   type activations  = ()
-  type max_pool     = NN input weights output cache error_in error_out (apply_grad t)
+  type max_pool     = NN input weights output
+                      cache error_in error_out (apply_grad t)
 
-  let empty_cache : cache = [[[[]]]]
+  let empty_cache : cache     = [[[[]]]]
   let empty_error : error_out = [[[[]]]]
 
   --- Finds the maximum value given an matrix
@@ -54,7 +53,7 @@ module max_pooling_2d (R:real) : layer with t = R.t
     let (output_m, output_n)  = (input_m/w_m, input_n/w_n)
     let ixs = map (\x -> x * w_m) (0..<output_m)
     let jxs = map (\x -> x * w_n) (0..<output_n)
-    let (idx, output) =
+    let (offsets, output) =
       unzip (map (\image ->
          unzip (map (\layer ->
                unzip (map (\i ->
@@ -65,7 +64,7 @@ module max_pooling_2d (R:real) : layer with t = R.t
                             in (offset, res)) jxs)) ixs)) image)) input)
 
     let cache = if training then
-                 idx
+                 offsets
                  else
                  empty_cache
     in (cache, output)
@@ -85,8 +84,10 @@ module max_pooling_2d (R:real) : layer with t = R.t
       let (height, width)    = (layer_m * m , layer_n * n)
       let total_elem         = height * width
       let retval             = map (\_ -> R.(i32 0)) (0..<(total_elem))
-      let idx_flat           = map (\image -> map (\layer -> flatten layer) image) idx
-      let error_flat         = map (\image -> map (\layer -> flatten layer) image) error
+      let idx_flat           =
+        map (\image -> map (\layer -> flatten layer) image) idx
+      let error_flat         =
+        map (\image -> map (\layer -> flatten layer) image) error
       --- Write values back to their place
       let error'       =
         map2 (\ix_img err_img ->

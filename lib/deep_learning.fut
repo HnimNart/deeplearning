@@ -20,4 +20,5 @@ module deep_learning (R:real) : {
   module layers = layers_coll R
   module loss = loss_funcs R
   module train = optimizers_coll R
+
 }
