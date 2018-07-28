@@ -6,7 +6,8 @@ module type trainer = {
   type ^learning_rate
 
   -- | Train function with signature
-  --   network -> learning_rate -> input data -> labels -> batch_size -> classifier
+  --   network -> learning_rate -> input data -> labels
+  --   -> batch_size -> classifier
   --   Returns the new network with updated weights
   val train 'i 'w 'g 'e2 'o : NN ([]i) w ([]o) g ([]o) e2 (apply_grad t) ->
                               learning_rate ->
@@ -15,5 +16,4 @@ module type trainer = {
                               i32 ->
                               loss_func o t->
                               NN ([]i) w ([]o) g ([]o) e2 (apply_grad t)
-
 }
