@@ -3,13 +3,13 @@ import "../nn_types"
 module type trainer = {
 
   type t
-  type ^alpha
+  type ^learning_rate
 
   -- | Train function with signature
   --   network -> learning_rate -> input data -> labels -> batch_size -> classifier
   --   Returns the new network with updated weights
   val train 'i 'w 'g 'e2 'o : NN ([]i) w ([]o) g ([]o) e2 (apply_grad t) ->
-                              alpha ->
+                              learning_rate ->
                               ([]i) ->
                               ([]o) ->
                               i32 ->

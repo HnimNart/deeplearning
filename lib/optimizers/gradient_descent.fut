@@ -5,17 +5,17 @@ import "../util"
 -- | Plain vanilla gradient descent optimizer
 --   with mean gradient and constant learning rate
 module gradient_descent (R:real) : trainer with t = R.t
-                                          with alpha = R.t = {
+                                           with learning_rate = R.t = {
 
   type t = R.t
-  type alpha = t
+  type learning_rate = t
 
   module util = utility R
 
-  let apply_grad_gd (alpha:alpha)
-                 (batch_size:i32)
-                 ((w,b):(std_weights t))
-                 ((wg,bg):(std_weights t)) =
+  let apply_grad_gd (alpha:learning_rate)
+                    (batch_size:i32)
+                    ((w,b):(std_weights t))
+                    ((wg,bg):(std_weights t)) =
 
     let wg_mean   = map (map R.((/i32 batch_size))) wg
     let bg_mean   = map (R.((/i32 batch_size))) bg
@@ -32,7 +32,7 @@ module gradient_descent (R:real) : trainer with t = R.t
                                   backward=b,
                                   update=u,
                                   weights=w}:NN ([]i) w ([]o) g ([]o) e2 (apply_grad t))
-                                (alpha:alpha)
+                                (alpha:learning_rate)
                                 (input:[n]i)
                                 (labels:[n]o)
                                 (batch_sz: i32)
