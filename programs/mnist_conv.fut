@@ -7,7 +7,7 @@ let max_pool1 = dl.layers.max_pooling2d (2,2)
 let conv2     = dl.layers.conv2d (64, 3, 1, 32) dl.nn.relu seed
 let max_pool2 = dl.layers.max_pooling2d (2,2)
 let flat      = dl.layers.flatten
-let fc        = dl.layers.dense (1600, 1024) dl.nn.relu seed
+let fc        = dl.layers.dense (1600, 1024) dl.nn.identity seed
 let output    = dl.layers.dense (1024, 10)   dl.nn.identity seed
 
 let nn0   = dl.nn.connect_layers conv1 max_pool1

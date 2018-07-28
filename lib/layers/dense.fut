@@ -4,6 +4,8 @@ import "../util"
 import "../random_gen"
 import "/futlib/linalg"
 
+
+-- | Fully connected layer
 module dense (R:real) : layer_type with t = R.t
                                    with input_params = (i32, i32)
                                    with activations  = activation_func ([]R.t)

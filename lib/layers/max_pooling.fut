@@ -2,6 +2,7 @@ import "../nn_types"
 import "layer_type"
 
 
+-- | Max pooling 2d
 module max_pooling_2d (R:real) : layer_type with t = R.t
                                             with input_params = (i32 , i32)
                                             with activations = ()

@@ -4,6 +4,10 @@ import "../util"
 import "../random_gen"
 import "/futlib/linalg"
 
+
+
+-- | 2D convolutional layer
+-- Uses GEMM method to perform convolution operation
 module conv2d (R:real) : layer_type with t = R.t
                                     with input_params = (i32,i32, i32, i32)
                                     with activations  = activation_func ([]R.t)
@@ -54,7 +58,7 @@ module conv2d (R:real) : layer_type with t = R.t
       scatter (map (\_ -> R.(i32 0)) (0..<tot_elem)) (offsets) (flatten X)
     in unflatten output_m output_n retval
 
-    --- Transforms img convolution to column matrix
+  --- Transforms img convolution to column matrix
   let im2col (x:arr3d t)
              ((w_m, w_n):(i32, i32))
              (idx:arr1d  (i32, i32)) : arr2d t =
