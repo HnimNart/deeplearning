@@ -2,7 +2,6 @@ import "optimizer_type"
 import "../nn_types"
 import "../util"
 
-
 -- | Plain vanilla gradient descent optimizer
 --   with mean gradient and constant learning rate
 module gradient_descent (R:real) : trainer with t = R.t
@@ -13,19 +12,19 @@ module gradient_descent (R:real) : trainer with t = R.t
 
   module util = utility R
 
-  let apply_grad (alpha:alpha)
+  let apply_grad_gd (alpha:alpha)
                  (batch_size:i32)
                  ((w,b):(std_weights t))
                  ((wg,bg):(std_weights t)) =
 
-      let wg_mean   = map (map R.((/i32 batch_size))) wg
-      let bg_mean   = map (R.((/i32 batch_size))) bg
+    let wg_mean   = map (map R.((/i32 batch_size))) wg
+    let bg_mean   = map (R.((/i32 batch_size))) bg
 
-      let wg_scaled = util.scale_matrix wg_mean alpha
-      let bg_scaled = util.scale_v bg_mean alpha
+    let wg_scaled = util.scale_matrix wg_mean alpha
+    let bg_scaled = util.scale_v bg_mean alpha
 
-      let w'        = util.sub_matrix w wg_scaled
-      let b'        = util.sub_v b bg_scaled
+    let w'        = util.sub_matrix w wg_scaled
+    let b'        = util.sub_v b bg_scaled
 
     in (w', b')
 
@@ -46,7 +45,7 @@ module gradient_descent (R:real) : trainer with t = R.t
                    let (cache, output) = f true w (input')
                    let error           = map2 (\o l -> loss' o l) output label'
                    let (_, grads)      = b false w cache error
-                   let w'              = u (apply_grad alpha batch_sz) w grads
+                   let w'              = u (apply_grad_gd alpha batch_sz) w grads
                    in (w', i + batch_sz)
     in {forward = f, backward = b, update = u, weights = w'}
 

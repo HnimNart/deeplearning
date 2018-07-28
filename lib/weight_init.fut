@@ -2,24 +2,25 @@
 --   Used for weight initilization
 import "/futlib/random"
 
-module type random_generator = {
+module weight_initializer (R:real) : {
 
-  type t
+  type t = R.t
+  ---- Using xavier uniform initializer [-limit, limit]
+  ---- with limit = sqrt(6/(fan_in + fan_out))
   val gen_random_array_2d_xavier_uni: (i32, i32) -> i32 -> [][]t
+
+  --- Using xavier norm initialize
+  --- with mean = 0 and std = sqrt(2 / (fan_in + fan_out))
+  --- Unstable! produces -inf in some cases
   val gen_random_array_2d_xavier_norm: (i32, i32) -> i32 -> [][]t
 
-}
+} = {
 
---- Generate random numbers using xavier initilization
-module normal_random_array (R:real) : random_generator
-                                      with t = R.t = {
   type t = R.t
 
   module norm = normal_distribution R minstd_rand
   module uni  = uniform_real_distribution R minstd_rand
 
-  ---- Using xavier uniform initializer [-limit, limit]
-  ---- with limit = sqrt(6/(fan_in + fan_out))
   let gen_rand_uni (i:i32)  (dist:(uni.num.t, uni.num.t)): t =
     let rng = uni.engine.rng_from_seed [i]
     let (_, x) = uni.rand dist rng in x
@@ -32,9 +33,6 @@ module normal_random_array (R:real) : random_generator
     let arr = gen_random_array_uni (m*n) (R.(negate d),d) seed
     in unflatten n m arr
 
-  --- Using xavier norm initialize
-  --- with mean = 0 and std = sqrt(2 / (fan_in + fan_out))
-  --- Unstable! produces inf in some cases
   let gen_rand_norm (i: i32) (dist) : t =
     let rng = norm.engine.rng_from_seed [i]
     let (_, x) = norm.rand dist rng in
@@ -48,6 +46,4 @@ module normal_random_array (R:real) : random_generator
     let dist = {mean = R.(i32 0), stddev = n_sqrt}
     let arr = gen_random_array_norm (m*n) seed dist
     in unflatten n m (map (\x -> R.(x / n_sqrt)) arr)
-
-
 }

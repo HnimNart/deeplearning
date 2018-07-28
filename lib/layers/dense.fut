@@ -1,7 +1,7 @@
 import "layer_type"
 import "../nn_types"
 import "../util"
-import "../random_gen"
+import "../weight_init"
 import "/futlib/linalg"
 
 
@@ -33,11 +33,10 @@ module dense (R:real) : layer_type with t = R.t
 
   module lalg   = linalg R
   module util   = utility R
-  module random = normal_random_array R
+  module w_init = weight_initializer R
 
   let empty_cache:cache= ([[]],[[]])
   let empty_error:error_out = [[]]
-
 
   -- Forward propagation
   let forward  (act:[]t -> []t)
@@ -59,7 +58,7 @@ module dense (R:real) : layer_type with t = R.t
                (error:error_in) : b_output =
 
     let deriv  = (map (\x -> act x) inp_w_bias)
-    let delta  = transpose (util.mult_matrix error deriv)
+    let delta  = transpose (util.hadamard_prod_2d error deriv)
     let w_grad = lalg.matmul delta input
     let b_grad = map (R.sum) delta
 
@@ -76,7 +75,7 @@ module dense (R:real) : layer_type with t = R.t
     f w wg
 
   let init ((m,n):input_params) (act:activations) (seed:i32) : dense_tp =
-    let w = random.gen_random_array_2d_xavier_uni (m,n) seed
+    let w = w_init.gen_random_array_2d_xavier_uni (m,n) seed
     let b = map (\_ -> R.(i32 0)) (0..<n)
     in
     {forward  = forward act.f,

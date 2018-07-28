@@ -1,7 +1,7 @@
 import "layer_type"
 import "../nn_types"
 import "../util"
-import "../random_gen"
+import "../weight_init"
 import "/futlib/linalg"
 
 
@@ -33,7 +33,7 @@ module conv2d (R:real) : layer_type with t = R.t
 
   module lalg   = linalg R
   module util   = utility R
-  module random = normal_random_array R
+  module w_init = weight_initializer R
 
   let zero_dims: dims = (0,0,0)
   let empty_cache: cache = (zero_dims, [[[]]], [[[[]]]])
@@ -58,7 +58,8 @@ module conv2d (R:real) : layer_type with t = R.t
       scatter (map (\_ -> R.(i32 0)) (0..<tot_elem)) (offsets) (flatten X)
     in unflatten output_m output_n retval
 
-  --- Transforms img convolution to column matrix
+  -- Transforms 3D imgage to column matrix
+  -- for convolutional op
   let im2col (x:arr3d t)
              ((w_m, w_n):(i32, i32))
              (idx:arr1d  (i32, i32)) : arr2d t =
@@ -106,12 +107,13 @@ module conv2d (R:real) : layer_type with t = R.t
     let res_deriv       = map (\image ->
                                map (\layer ->
                                     map (\row -> act row) layer) image) res_bias
-    let delta           = util.mult_matrix_4d error res_deriv
+    let delta           = util.hadamard_prod_4d error res_deriv
 
     let delta_flat      = map (\img -> map (\layer -> flatten layer) img) delta
     let grads_w         =
       map2 (\img d ->
             transpose (lalg.matmul img (transpose d))) img_matrix delta_flat
+
     let grad_w          = map (\d -> map (R.sum) (transpose d)) (transpose grads_w)
 
     let grads_b         =
@@ -143,15 +145,15 @@ module conv2d (R:real) : layer_type with t = R.t
   let update (f:apply_grad t) (w:weights) (wg:weights) =
     f w wg
 
-  let init ((filters, kernel, stride, depth):input_params)
+  let init ((filters, k , stride, depth):input_params)
            (act:activations)
            (seed: i32)  =
     let w: arr2d t =
-      random.gen_random_array_2d_xavier_uni ((kernel* kernel * depth), filters) seed
+      w_init.gen_random_array_2d_xavier_uni ((k * k * depth), filters) seed
     let b: arr1d t = replicate filters R.(i32 0)
     in
-    {forward  = forward act.f (kernel,kernel) stride,
-     backward = backward act.fd kernel stride,
+    {forward  = forward act.f (k,k) stride,
+     backward = backward act.fd k stride,
      update   = update,
      weights  = (w,b)}
 }
