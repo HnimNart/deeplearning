@@ -19,7 +19,7 @@ let nn    = dl.nn.connect_layers nn4 output
 
 -- ==
 --
--- tags { futhark-open }
+-- tags { futhark-opencl }
 -- input @ ../data/mnist_100000_f32.bindata
 
 
