@@ -1,6 +1,6 @@
 import "../nn_types"
 
-module type trainer = {
+module type optimizer_type = {
 
   type t
   type ^learning_rate

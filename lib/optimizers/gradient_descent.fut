@@ -4,8 +4,9 @@ import "../util"
 
 -- | Plain vanilla gradient descent optimizer
 --   with mean gradient and constant learning rate
-module gradient_descent (R:real) : trainer with t = R.t
-                                           with learning_rate = R.t = {
+module gradient_descent (R:real) : optimizer_type
+                                   with t = R.t
+                                   with learning_rate = R.t = {
 
   type t = R.t
   type learning_rate = t
