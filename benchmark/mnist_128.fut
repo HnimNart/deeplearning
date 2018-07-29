@@ -7,16 +7,19 @@ let l1 = dl.layers.dense (784, 256) dl.nn.identity seed
 let l2 = dl.layers.dense (256, 256) dl.nn.identity seed
 let l3 = dl.layers.dense (256, 10) dl.nn.identity seed
 
-let nn0 = dl.nn.connect_layers l1 l2
-let nn  = dl.nn.connect_layers nn0 l3
+let nn1 = dl.nn.connect_layers l1 l2
+let nn  = dl.nn.connect_layers nn1 l3
 
-let main [m] (input:[m][]dl.t) (labels:[m][]dl.t) =
-  let train = 64000
-  let validation = 10000
+-- ==
+--
+-- tags { futhark-opencl }
+-- input @ ../data/mnist_100000_f32.bindata
+
+let main [m] (input: [m][]dl.t) (labels: [m][]dl.t) =
+  let n = 64000
   let batch_size = 128
-  let alpha = 0.1
+  let alpha = 0.01
   let nn' = dl.train.gradient_descent nn alpha
-            input[:train] labels[:train]
+            input[:n] labels[:n]
             batch_size dl.loss.softmax_cross_entropy_with_logits
-  in dl.nn.accuracy nn' input[train:train+validation]
-     labels[train:train+validation] dl.nn.softmax dl.nn.argmax
+  in nn'.weights

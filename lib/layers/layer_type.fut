@@ -1,7 +1,7 @@
 import "../nn_types"
 
 
-module type layer = {
+module type layer_type = {
 
   type t
 
@@ -16,6 +16,7 @@ module type layer = {
   type cache
 
   --- Initialize layer given input params
-  val init: input_params -> activations -> i32 -> NN input weights output cache error_in error_out (apply_grad t)
+  val init: input_params -> activations -> i32 ->
+         NN input weights output cache error_in error_out (apply_grad t)
 
 }
