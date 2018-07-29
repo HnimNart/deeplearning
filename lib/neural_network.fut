@@ -12,14 +12,14 @@ module type network = {
                       NN i1 (w1, w2) (o2) (c1,c2) (e2) (e1) (apply_grad t)
 
   --- Performs predictions on data set given a network,
-  --- input data and classifier
+  --- input data and activation func
   val predict 'w 'g 'i 'e1 'e2 '^u 'o  : NN ([]i) (w) ([]o) g e1 e2 u ->
                                          []i ->
                                          activation_func o ->
                                          []o
 
   --- Calculates the accuracy given a network, input,
-  --- labels and classifier
+  --- labels and activation_func
   val accuracy 'w 'g 'e1 'e2 'i '^u 'o : NN ([]i)  w  ([]o) g e1 e2 u ->
                                          []i ->
                                          []o ->

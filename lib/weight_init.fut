@@ -1,4 +1,4 @@
--- | Module for creating random numbers in different ways
+-- | Module for creating random numbers
 --   Used for weight initilization
 import "/futlib/random"
 

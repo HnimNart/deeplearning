@@ -22,8 +22,8 @@ entry max_pooling_fwd input =
 --          [12.0, 32.0, 12.0,  45.0],
 --          [5.0,  7.0,  8.0,   9.0],
 --          [2.0,  12.0, 14.0,  56.0]]]] }
--- output{ [[[[5.0,   3.0],
---            [13.0, 15.0]]]]}
+-- output{ [[[[5i32,   3i32],
+--            [13i32, 15i32]]]]}
 
 entry max_pooling_cache input =
     let (cache, _) = max_layer.forward true max_layer.weights input

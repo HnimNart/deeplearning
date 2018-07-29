@@ -10,7 +10,7 @@ module type loss = {
 
   val cross_entropy : loss_func ([]t) t
   val softmax_cross_entropy_with_logits :loss_func ([]t) t
-  val sum_of_squares : loss_func ([]t) t
+  val sum_of_squares_error : loss_func ([]t) t
 }
 
 module loss_funcs (R:real) : loss with t = R.t = {
@@ -36,17 +36,17 @@ module loss_funcs (R:real) : loss with t = R.t = {
   let softmax_cross_entropy_with_logits_stable_1d' [d] (logits:[d]t)
                                                        (labels:[d]t) =
     let softmax_res = activations.Softmax_1d.f logits
-    in map2 (\x y -> R.(x - y)) softmax_res labels
+    in map2 (\x y -> R.(y - x)) labels softmax_res
 
   let sum_of_squares_error_1d [d] (logits:[d]t) (labels:[d]t) =
-    let res = R.sum (map2 (\x y -> R.((x - y)**(i32 2))) logits labels)
+    let res = R.sum (map2 (\x y -> R.((x-y)**(i32 2) )) logits labels)
     in R.(res / i32 2)
 
   let sum_of_squares_error_1d' [d] (logits:[d]t) (labels:[d]t) =
       map2 (\x y -> R.(x - y)) logits labels
 
   --- Wrappers for loss function pairs ---
-  let sum_of_squares =
+  let sum_of_squares_error =
     {f  = sum_of_squares_error_1d,
      fd = sum_of_squares_error_1d'}
 
