@@ -11,7 +11,6 @@ module weight_initializer (R:real) : {
 
   --- Using xavier norm initialize
   --- with mean = 0 and std = sqrt(2 / (fan_in + fan_out))
-  --- Unstable! produces -inf in some cases
   val gen_random_array_2d_xavier_norm: (i32, i32) -> i32 -> [][]t
 
 } = {
@@ -35,15 +34,14 @@ module weight_initializer (R:real) : {
 
   let gen_rand_norm (i: i32) (dist) : t =
     let rng = norm.engine.rng_from_seed [i]
-    let (_, x) = norm.rand dist rng in
-    let retval =  R.(if isinf x then i32 0 else x) in retval
+    let (_, x) = norm.rand dist rng in x
 
   let gen_random_array_norm (d: i32) (seed: i32) (dist) : []t =
     map (\x -> gen_rand_norm x dist) (map (\x -> x + d + seed) (iota d))
 
   let gen_random_array_2d_xavier_norm ((m,n):(i32, i32)) (seed:i32) : [][]t =
     let n_sqrt = R.(sqrt (i32 2/ (i32 m + i32 n)))
-    let dist = {mean = R.(i32 0), stddev = n_sqrt}
+    let dist = {mean = R.(i32 0), stddev = n_sqrt }
     let arr = gen_random_array_norm (m*n) seed dist
-    in unflatten n m (map (\x -> R.(x / n_sqrt)) arr)
+    in unflatten n m (map (\x -> R.(x)) arr)
 }

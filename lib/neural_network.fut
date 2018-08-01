@@ -67,9 +67,9 @@ module neural_network (R:real): network with t = R.t = {
                             let (c1, res)  = f1 is_training w1 input
                             let (c2, res2) = f2 is_training w2 res
                             in ((c1, c2), res2),
-     backward = \(_) f (w1,w2) (c1,c2) (error) ->
-                            let (err2, w2') = b2 false f w2 c2 error
-                            let (err1, w1') = b1 true f w1 c1 err2
+     backward = \(_) u (w1,w2) (c1,c2) (error) ->
+                            let (err2, w2') = b2 false u w2 c2 error
+                            let (err1, w1') = b1 true u w1 c1 err2
                             in (err1, (w1', w2')),
      weights = (ws1, ws2)}
 

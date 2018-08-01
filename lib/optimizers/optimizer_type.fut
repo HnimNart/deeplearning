@@ -11,9 +11,9 @@ module type optimizer_type = {
   --   Returns the new network with updated weights
   val train 'i 'w 'g 'e2 'o : NN ([]i) w ([]o) g ([]o) e2 (apply_grad t) ->
                               learning_rate ->
-                              ([]i) ->
-                              ([]o) ->
-                              i32 ->
-                              loss_func o t->
+                              (input:([]i)) ->
+                              (labels:([]o)) ->
+                              (seed:i32) ->
+                              loss_func o t ->
                               NN ([]i) w ([]o) g ([]o) e2 (apply_grad t)
 }
