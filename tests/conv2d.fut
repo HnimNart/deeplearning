@@ -1,5 +1,26 @@
 import "../lib/deep_learning"
+import "../lib/util"
+
 module dl = deep_learning f64
+module util = utility f64
+
+let apply_grad_gd (alpha:f64)
+                  (batch_size:i32)
+                  ((w,b):([][]f64, []f64))
+                  ((wg,bg):([][]f64,[]f64)) =
+
+  let wg_mean   = map (map f64.((/i32 batch_size))) wg
+  let bg_mean   = map (f64.((/i32 batch_size))) bg
+
+  let wg_scaled = util.scale_matrix wg_mean alpha
+  let bg_scaled = util.scale_v bg_mean alpha
+
+  let w'        = util.sub_matrix w wg_scaled
+  let b'        = util.sub_v b bg_scaled
+
+  in (w', b')
+
+let updater = (apply_grad_gd 0.1 1)
 
 let conv = dl.layers.conv2d (2, 2, 1, 2) dl.nn.identity 1
 
@@ -113,7 +134,7 @@ entry conv2d_cache_matrix data w b  =
 
 entry conv2d_bwd_error data w b  =
   let (cache, output) = conv.forward true (w,b) data
-  let (err, _) = conv.backward false (w,b) cache output in err
+  let (err, _) = conv.backward false updater (w,b) cache output in err
 
 -- ==
 -- entry: conv2d_bwd_dW
@@ -129,12 +150,12 @@ entry conv2d_bwd_error data w b  =
 --
 --         [1.0,2.0] }
 --
--- output {[[ 5508.00, 7224.00, 10656.00, 12372.00, 20952.00, 22668.00, 26100.00, 27816.00],
---          [ 3456.00, 4488.00,  6552.00,  7584.00, 12744.00, 13776.00, 15840.00, 16872.00]]}
+-- output {[[-549.80, -720.40, -1062.60, -1233.20, -2090.20, -2260.80, -2603.00, -2773.60],
+--          [-337.60, -441.80,  -649.20,  -753.40, -1270.40, -1374.60, -1582.00, -1686.20]]}
 
-entry conv2d_bwd_dW data w b  =
+entry conv2d_bwd_dW data w b =
   let (cache, output) = conv.forward true (w,b) data
-  let (_, (w',_)) = conv.backward false (w,b) cache output in w'
+  let (_, (w',_)) = conv.backward false updater (w,b) cache output in w'
 
 -- ==
 -- entry: conv2d_bwd_dB
@@ -150,8 +171,9 @@ entry conv2d_bwd_dW data w b  =
 --
 --         [1.0,2.0] }
 --
--- output {[ 1716.0, 1030.0]}
+-- output {[-170.60, -101.20]}
+
 
 entry conv2d_bwd_dB data w b  =
   let (cache, output) = conv.forward true (w,b) data
-  let (_, (_,b')) = conv.backward false (w,b) cache output in b'
+  let (_, (_,b')) = conv.backward false updater (w,b) cache output in b'

@@ -1,7 +1,30 @@
 import "../lib/deep_learning"
+import "../lib/util"
+
 module dl = deep_learning f64
+module util = utility f64
 
 let dense = dl.layers.dense (4,3) dl.nn.identity 1
+
+let apply_grad_gd (alpha:f64)
+                  (batch_size:i32)
+                  ((w,b):([][]f64, []f64))
+                  ((wg,bg):([][]f64,[]f64)) =
+
+  let wg_mean   = map (map f64.((/i32 batch_size))) wg
+  let bg_mean   = map (f64.((/i32 batch_size))) bg
+
+  let wg_scaled = util.scale_matrix wg_mean alpha
+  let bg_scaled = util.scale_v bg_mean alpha
+
+  let w'        = util.sub_matrix w wg_scaled
+  let b'        = util.sub_v b bg_scaled
+
+  in (w', b')
+
+let updater = (apply_grad_gd 0.1 1)
+
+
 
 -- ==
 -- entry: dense_fwd
@@ -81,7 +104,7 @@ entry dense_cache_2 input w b =
 
 entry dense_bwd_err input w b =
   let (cache, output) = dense.forward true (w,b) input
-  let (err, _) = dense.backward false (w,b) cache output in err
+  let (err, _) = dense.backward false updater (w,b) cache output in err
 
 
 -- ==
@@ -96,13 +119,14 @@ entry dense_bwd_err input w b =
 --
 --         [1.0, 2.0, 3.0]}
 --
--- output {[[ 266.00,  389.00,  512.00,  635.00],
---          [ 640.00,  934.00, 1228.00, 1522.00],
---          [1014.00, 1479.00, 1944.00, 2409.00]]}
+-- output {[[-25.60,  -36.90,  -48.20,  -59.50],
+--          [-59.00,  -87.40, -115.80, -144.20],
+--          [-92.40, -137.90, -183.40, -228.90]]}
+
 
 entry dense_bwd_dW input w b =
   let (cache, output) = dense.forward true (w,b) input
-  let (_, (w',_)) = dense.backward false (w,b) cache output
+  let (_, (w',_)) = dense.backward false updater (w,b) cache output
   in w'
 
 -- ==
@@ -117,9 +141,9 @@ entry dense_bwd_dW input w b =
 --
 --         [1.0, 2.0, 3.0]}
 --
--- output {[123.000000f64, 294.000000f64, 465.000000f64]}
+-- output {[-11.30, -27.40, -43.50]}
 
 entry dense_bwd_dB input w b =
   let (cache, output) = dense.forward true (w,b) input
-  let (_, (_,b')) = dense.backward false (w,b) cache output
+  let (_, (_,b')) = dense.backward false updater (w,b) cache output
   in b'
