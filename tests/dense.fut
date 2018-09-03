@@ -1,5 +1,5 @@
-import "../lib/deep_learning"
-import "../lib/util"
+import "../lib/github.com/HnimNart/deeplearning/deep_learning"
+import "../lib/github.com/HnimNart/deeplearning/util"
 
 module dl = deep_learning f64
 module util = utility f64

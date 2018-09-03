@@ -1,4 +1,4 @@
-import "../lib/deep_learning"
+import "../lib/github.com/HnimNart/deeplearning/deep_learning"
 module dl = deep_learning f32
 let seed = 1
 

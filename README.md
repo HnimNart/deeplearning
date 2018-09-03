@@ -8,3 +8,16 @@ for examples on how to build a network using the library
 
 If you find bugs, or find something that can be improved
 please open an issue! thanks!
+
+
+## Installation
+
+```
+$ futhark-pkg add github.com/HnimNart/deeplearning
+$ futhark-pkg sync
+```
+
+
+## Usage
+
+See example program for now.

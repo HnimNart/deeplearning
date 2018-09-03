@@ -1,4 +1,4 @@
-import "../lib/weight_init"
+import "../lib/github.com/HnimNart/deeplearning/weight_init"
 
 module rand = weight_initializer f64
 

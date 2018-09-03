@@ -1,5 +1,5 @@
-import "../lib/layers/max_pooling"
-import "../lib/util"
+import "../lib/github.com/HnimNart/deeplearning/layers/max_pooling"
+import "../lib/github.com/HnimNart/deeplearning/util"
 
 module max = max_pooling_2d f64
 module util = utility f64

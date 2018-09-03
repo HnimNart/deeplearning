@@ -1,4 +1,5 @@
-import "../lib/activation_funcs"
+import "../lib/github.com/HnimNart/deeplearning/activation_funcs"
+
 
 module act = activation_funcs f64
 

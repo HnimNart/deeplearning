@@ -1,4 +1,4 @@
-import "../lib/loss_funcs"
+import "../lib/github.com/HnimNart/deeplearning/loss_funcs"
 
 module loss = loss_funcs f64
 -- ==
