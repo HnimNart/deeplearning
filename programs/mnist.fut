@@ -1,6 +1,11 @@
 import "../lib/github.com/HnimNart/deeplearning/deep_learning"
 module dl = deep_learning f32
 
+--- Small example of training a MLP
+--- Data can be downloaded at
+--- http://napoleon.hiperfit.dk/~HnimNart/mnist_data/mnist_100000_f32.bindata
+--- Containing 100000 pairs of images and labels
+
 let seed = 1
 
 let l1 = dl.layers.dense (784, 256) dl.nn.identity seed

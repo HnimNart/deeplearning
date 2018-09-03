@@ -1,4 +1,10 @@
 import "../lib/github.com/HnimNart/deeplearning/deep_learning"
+
+--- Small example of training a convolutional network
+--- Data can be downloaded at
+--- http://napoleon.hiperfit.dk/~HnimNart/mnist_data/mnist_100000_f32.bindata
+--- Containing 100000 pairs of images and labels
+
 module dl = deep_learning f32
 let seed = 1
 
