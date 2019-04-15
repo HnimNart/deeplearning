@@ -68,7 +68,7 @@ module dense (R:real) : layer_type with t = R.t
     let error' =
       if first_layer
       then
-       empty_error
+       copy empty_error
       else
        transpose (lalg.matmul (transpose w) delta)
     in (error', (w', b'))

@@ -30,7 +30,7 @@ module flatten (R:real) : layer_type with t = R.t
 
   let forward (training: bool) (_:weights) (input:input) : (cache, output) =
      let dims = (length input[0], length input[0,0], length input[0,0,0])
-     let cache = if training then dims else empty_cache
+     let cache = if training then dims else copy empty_cache
      in (cache, map (\image -> flatten_3d image) input)
 
   let backward  (first_layer:bool)
@@ -40,7 +40,7 @@ module flatten (R:real) : layer_type with t = R.t
                 (error:error_in) : (error_out, weights) =
 
     if first_layer then
-      (empty_error, ())
+      (copy empty_error, ())
     else
       let (p,m,n) = input
       let error' = map (\img -> unflatten_3d p m n img) error

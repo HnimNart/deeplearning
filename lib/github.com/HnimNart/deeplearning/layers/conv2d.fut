@@ -127,7 +127,7 @@ module conv2d (R:real) : layer_type with t = R.t
     let error' =
       if first_layer
       then
-        empty_error
+        copy empty_error
       else
         let filter_sz    = k * k
         let w_offsets    = map (\i -> i * filter_sz) (0..<x_p)

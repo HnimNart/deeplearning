@@ -67,7 +67,7 @@ module max_pooling_2d (R:real) : layer_type with t = R.t
     let cache = if training then
                  offsets
                  else
-                 empty_cache
+                 copy empty_cache
     in (cache, output)
 
   -- Back propegate by up-sample
@@ -79,7 +79,7 @@ module max_pooling_2d (R:real) : layer_type with t = R.t
                (error:error_in): (error_out, weights) =
 
     if first_layer then
-      (empty_error, ())
+      (copy empty_error, ())
     else
       --- Recreate dimensions and create buffers
       let (layer_m, layer_n) = (length idx[0,0], length idx[0,0,0])
