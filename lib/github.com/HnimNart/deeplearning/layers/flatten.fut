@@ -6,9 +6,7 @@ module flatten (R:real) : layer_type with t = R.t
                                      with input_params = ()
                                      with activations  = ()
                                      with input        = arr4d R.t
-                                     with weights      = ()
                                      with output       = arr2d R.t
-                                     with cache        = dims3d
                                      with error_in     = arr2d R.t
                                      with error_out    = arr4d R.t = {
 

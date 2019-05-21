@@ -4,12 +4,13 @@ import "activation_funcs"
 module type network = {
 
   type t
+  type cache 'a 'b
 
   --- Combines two networks into one
   val connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e22:
                       NN i1 w1 o1 c1 e22 e1 (apply_grad t) ->
                       NN o1 w2 o2 c2 e2 e22 (apply_grad t) ->
-                      NN i1 (w1, w2) (o2) (c1,c2) (e2) (e1) (apply_grad t)
+                      NN i1 (w1, w2) (o2) (cache c1 c2) (e2) (e1) (apply_grad t)
 
   --- Performs predictions on data set given a network,
   --- input data and activation func
@@ -52,6 +53,7 @@ module type network = {
 module neural_network (R:real): network with t = R.t = {
 
   type t = R.t
+  type cache 'a 'b = (a,b)
 
   module act_funcs = activation_funcs R
 

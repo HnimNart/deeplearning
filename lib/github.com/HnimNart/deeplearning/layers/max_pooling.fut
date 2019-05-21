@@ -7,9 +7,7 @@ module max_pooling_2d (R:real) : layer_type with t = R.t
                                             with input_params = (i32 , i32)
                                             with activations = ()
                                             with input        = arr4d R.t
-                                            with weights      = ()
                                             with output       = arr4d R.t
-                                            with cache        = arr4d (i32)
                                             with error_in     = arr4d R.t
                                             with error_out    = arr4d R.t = {
 

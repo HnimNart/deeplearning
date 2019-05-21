@@ -10,9 +10,7 @@ module dense (R:real) : layer_type with t = R.t
                                    with input_params = (i32, i32)
                                    with activations  = activation_func ([]R.t)
                                    with input        = arr2d R.t
-                                   with weights      = std_weights R.t
                                    with output       = arr2d R.t
-                                   with cache        = (arr2d R.t, arr2d R.t)
                                    with error_in     = arr2d R.t
                                    with error_out    = arr2d R.t = {
 
