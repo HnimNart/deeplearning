@@ -23,11 +23,10 @@ let nn3   = dl.nn.connect_layers nn2 flat
 let nn4   = dl.nn.connect_layers nn3 fc
 let nn    = dl.nn.connect_layers nn4 output
 
-let main [m] (input: [m][]dl.t) (labels: [m][]dl.t) =
+let main [m] (batch_size: i32) (input: [m][]dl.t) (labels: [m][]dl.t) =
   let input' = map (\img -> [unflatten 28 28 img]) input
   let train = 64000
   let validation = 10000
-  let batch_size = 128
   let alpha = 0.1
   let nn' = dl.train.gradient_descent nn alpha
             input'[:train] labels[:train]
@@ -36,3 +35,9 @@ let main [m] (input: [m][]dl.t) (labels: [m][]dl.t) =
      input'[train:train+validation]
      labels[train:train+validation]
      (dl.nn.softmax) (dl.nn.argmax)
+
+-- ==
+-- compiled input @ batch_16_mnist_100000_f32.bindata
+-- compiled input @ batch_32_mnist_100000_f32.bindata
+-- compiled input @ batch_64_mnist_100000_f32.bindata
+-- compiled input @ batch_128_mnist_100000_f32.bindata
