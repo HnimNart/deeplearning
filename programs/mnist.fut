@@ -1,6 +1,6 @@
 -- Small example of training a MLP
 --
--- Run 'make'to generate data sets.
+-- Run 'make' to generate data sets.
 -- ==
 -- compiled input @ batch_16_mnist_100000_f32.bindata
 -- compiled input @ batch_32_mnist_100000_f32.bindata
