@@ -1,10 +1,14 @@
+-- Small example of training a MLP
+--
+-- Run 'make'to generate data sets.
+-- ==
+-- compiled input @ batch_16_mnist_100000_f32.bindata
+-- compiled input @ batch_32_mnist_100000_f32.bindata
+-- compiled input @ batch_64_mnist_100000_f32.bindata
+-- compiled input @ batch_128_mnist_100000_f32.bindata
+
 import "../lib/github.com/HnimNart/deeplearning/deep_learning"
 module dl = deep_learning f32
-
---- Small example of training a MLP
---- Data can be downloaded at
---- http://napoleon.hiperfit.dk/~HnimNart/mnist_data/mnist_100000_f32.bindata
---- Containing 100000 pairs of images and labels
 
 let seed = 1
 
@@ -22,11 +26,7 @@ let main [m] (batch_size: i32) (input:[m][]dl.t) (labels:[m][]dl.t) =
   let nn' = dl.train.gradient_descent nn alpha
             input[:train] labels[:train]
             batch_size dl.loss.softmax_cross_entropy_with_logits
-  in dl.nn.accuracy nn' input[train:train+validation]
-     labels[train:train+validation] dl.nn.softmax dl.nn.argmax
-
--- ==
--- compiled input @ batch_16_mnist_100000_f32.bindata
--- compiled input @ batch_32_mnist_100000_f32.bindata
--- compiled input @ batch_64_mnist_100000_f32.bindata
--- compiled input @ batch_128_mnist_100000_f32.bindata
+  in dl.nn.accuracy
+     nn'
+     input[train:train+validation] labels[train:train+validation]
+     dl.nn.softmax dl.nn.argmax

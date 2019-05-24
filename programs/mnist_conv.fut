@@ -1,11 +1,15 @@
+-- Small example of training a convolutional network
+--
+-- Run 'make' to generate data sets.
+-- ==
+-- compiled input @ batch_16_mnist_100000_f32.bindata
+-- compiled input @ batch_32_mnist_100000_f32.bindata
+-- compiled input @ batch_64_mnist_100000_f32.bindata
+-- compiled input @ batch_128_mnist_100000_f32.bindata
+
 import "../lib/github.com/HnimNart/deeplearning/deep_learning"
-
---- Small example of training a convolutional network
---- Data can be downloaded at
---- http://napoleon.hiperfit.dk/~HnimNart/mnist_data/mnist_100000_f32.bindata
---- Containing 100000 pairs of images and labels
-
 module dl = deep_learning f32
+
 let seed = 1
 
 let conv1     = dl.layers.conv2d (32, 5, 1, 1) dl.nn.relu seed
@@ -31,13 +35,7 @@ let main [m] (batch_size: i32) (input: [m][]dl.t) (labels: [m][]dl.t) =
   let nn' = dl.train.gradient_descent nn alpha
             input'[:train] labels[:train]
             batch_size dl.loss.softmax_cross_entropy_with_logits
-  in dl.nn.accuracy nn'
-     input'[train:train+validation]
-     labels[train:train+validation]
-     (dl.nn.softmax) (dl.nn.argmax)
-
--- ==
--- compiled input @ batch_16_mnist_100000_f32.bindata
--- compiled input @ batch_32_mnist_100000_f32.bindata
--- compiled input @ batch_64_mnist_100000_f32.bindata
--- compiled input @ batch_128_mnist_100000_f32.bindata
+  in dl.nn.accuracy
+     nn'
+     input'[train:train+validation] labels[train:train+validation]
+     dl.nn.softmax dl.nn.argmax
