@@ -7,10 +7,10 @@ module type network = {
   type pair 'a 'b
 
   --- Combines two networks into one
-  val connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e22:
-                      NN i1 w1 o1 c1 e22 e1 (apply_grad t) ->
-                      NN o1 w2 o2 c2 e2 e22 (apply_grad t) ->
-                      NN i1 (pair w1 w2) (o2) (pair c1 c2) (e2) (e1) (apply_grad t)
+  val connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e22 '^u:
+                      NN i1 w1 o1 c1 e22 e1 u ->
+                      NN o1 w2 o2 c2 e2 e22 u ->
+                      NN i1 (pair w1 w2) (o2) (pair c1 c2) (e2) (e1) u
 
   --- Performs predictions on data set given a network,
   --- input data and activation func
@@ -58,12 +58,12 @@ module neural_network (R:real): network with t = R.t = {
   module act_funcs = activation_funcs R
 
 
-  let connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e
+  let connect_layers 'w1 'w2 'i1 'o1 'o2 'c1 'c2 'e1 'e2 'e '^u
                      ({forward=f1, backward=b1,
-                        weights=ws1}: NN i1 w1 o1 c1 e e1 (apply_grad t))
+                        weights=ws1}: NN i1 w1 o1 c1 e e1 u)
                      ({forward=f2, backward=b2,
-                        weights=ws2}: NN o1 w2 o2 c2 e2 e (apply_grad t))
-                      : NN i1 (w1,w2) (o2) (c1,c2) (e2) (e1) (apply_grad t) =
+                        weights=ws2}: NN o1 w2 o2 c2 e2 e u)
+                      : NN i1 (w1,w2) (o2) (c1,c2) (e2) (e1) u =
 
     {forward = \(is_training) (w1, w2) (input) ->
                             let (c1, res)  = f1 is_training w1 input
