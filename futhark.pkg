@@ -1,6 +1,6 @@
 package github.com/HnimNart/deeplearning
 
 require {
-  github.com/diku-dk/linalg 0.2.1 #dd62e81c32696744e7bec6180dc001ab548ea65b
-  github.com/diku-dk/cpprandom 1.1.4 #7dd47f3f2f5a8fa24d6847b34d9f8a9091b5d94a
+  github.com/diku-dk/linalg 0.2.4 #2d0690f4d8022fa3027dae29ca54b4a0193c8215
+  github.com/diku-dk/cpprandom 1.1.8 #70b757d52b31cd01527cb25fcbfd4474299d0e0a
 }

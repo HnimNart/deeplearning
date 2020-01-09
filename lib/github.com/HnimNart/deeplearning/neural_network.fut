@@ -14,39 +14,39 @@ module type network = {
 
   --- Performs predictions on data set given a network,
   --- input data and activation func
-  val predict 'w 'g 'i 'e1 'e2 '^u 'o  : NN ([]i) (w) ([]o) g e1 e2 u ->
-                                         []i ->
-                                         activation_func o ->
-                                         []o
+  val predict [d] 'w 'g 'i 'e1 'e2 '^u 'o  : NN ([d]i) w ([d]o) g e1 e2 u ->
+                                             [d]i ->
+                                             activation_func o ->
+                                             [d]o
 
   --- Calculates the accuracy given a network, input,
   --- labels and activation_func
-  val accuracy 'w 'g 'e1 'e2 'i '^u 'o : NN ([]i)  w  ([]o) g e1 e2 u ->
-                                         []i ->
-                                         []o ->
+  val accuracy [d] 'w 'g 'e1 'e2 'i '^u 'o : NN ([d]i) w ([d]o) g e1 e2 u ->
+                                         [d]i ->
+                                         [d]o ->
                                          activation_func o ->
                                          (o -> i32) ->
                                          t
 
   --- Calculates the absolute loss given a network, input, labels,
   --- a loss function and classifier aka activation func
-  val loss 'w 'g 'e1 'e2 '^u 'i 'o : NN ([]i) w ([]o) g e1 e2 u ->
-                                     []i ->
-                                     []o ->
+  val loss [d] 'w 'g 'e1 'e2 '^u 'i 'o : NN ([d]i) w ([d]o) g e1 e2 u ->
+                                     [d]i ->
+                                     [d]o ->
                                      loss_func o t ->
                                      activation_func o ->
                                      t
 
   --- activation function wrappers
-  val identity : activation_func ([]t)
-  val sigmoid  : activation_func ([]t)
-  val relu     : activation_func ([]t)
-  val tanh     : activation_func ([]t)
-  val softmax  : activation_func ([]t)
+  val identity [n] : activation_func ([n]t)
+  val sigmoid  [n] : activation_func ([n]t)
+  val relu     [n] : activation_func ([n]t)
+  val tanh     [n] : activation_func ([n]t)
+  val softmax  [n] : activation_func ([n]t)
 
   --- helper functions for calculating accuracy
-  val argmax : []t -> i32
-  val argmin : []t -> i32
+  val argmax [n] : [n]t -> i32
+  val argmin [n] : [n]t -> i32
 
 }
 
@@ -76,16 +76,15 @@ module neural_network (R:real): network with t = R.t = {
      weights = (ws1, ws2)}
 
 
-  let predict  'i 'w 'g 'e1 'e2 'u 'o
-               ({forward=f, backward=_, weights=w}:NN ([]i) w ([]o) g e1 e2 u)
-               (input:[]i)
+  let predict  [d] 'i 'w 'g 'e1 'e2 'u 'o
+               ({forward=f, backward=_, weights=w}:NN i w ([d]o) g e1 e2 u)
+               (input:i)
                ({f=class, fd = _}:activation_func o)  =
-
     let (_, output) = f false w input
     in map (\o -> class o) output
 
 
-  let accuracy [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([]i) w ([]o) g e1 e2 u)
+  let accuracy [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([d]i) w ([d]o) g e1 e2 u)
                                           (input:[d]i)
                                           (labels:[d]o)
                                           (classification:activation_func o)
@@ -98,7 +97,7 @@ module neural_network (R:real): network with t = R.t = {
     in R.(i32 total / i32 d)
 
 
-  let loss [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([]i) w ([]o) g e1 e2 u)
+  let loss [d] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN ([d]i) w ([d]o) g e1 e2 u)
                                       (input:[d]i)
                                       (labels:[d]o)
                                       ({f = loss, fd = _}: loss_func o t)

@@ -6,23 +6,23 @@ module utility (R:real) : {
   type t = R.t
 
   --- Subtracts element wise
-  val sub_v  : []t -> []t -> []t
-  val sub_matrix:  [][]t -> [][]t -> [][]t
+  val sub_v [n] : [n]t -> [n]t -> [n]t
+  val sub_matrix [n][m]:  [n][m]t -> [n][m]t -> [n][m]t
 
   --- Scales matrix/vector with t
-  val scale_v: []t -> t -> []t
-  val scale_matrix: [][]t -> t -> [][]t
+  val scale_v [n]: [n]t -> t -> [n]t
+  val scale_matrix [n][m]: [n][m]t -> t -> [n][m]t
 
   --- element wise product
-  val hadamard_prod_2d : [][]t -> [][]t -> [][]t
-  val hadamard_prod_3d : [][][]t -> [][][]t -> [][][]t
-  val hadamard_prod_4d : [][][][]t -> [][][][]t -> [][][][]t
+  val hadamard_prod_2d [m][n] : [m][n]t -> [m][n]t -> [m][n]t
+  val hadamard_prod_3d [m][n][p] : [m][n][p]t -> [m][n][p]t -> [m][n][p]t
+  val hadamard_prod_4d [m][n][p][q] : [m][n][p][q]t -> [m][n][p][q]t -> [m][n][p][q]t
 
   --- Creates an diagonal matrix from vector
   --- with zeros for (i != j)
-  val diag: []t -> [][]t
+  val diag [n] : [n]t -> [n][n]t
   --- Extracts diagonal from matrix
-  val extract_diag: [][]t -> []t
+  val extract_diag [n]: [n][n]t -> [n]t
 
 } = {
 
@@ -52,15 +52,13 @@ module utility (R:real) : {
     map2 (\x y -> hadamard_prod_3d x y) X Y
 
 
-  let diag (X:[]t) =
-    let len = length X
+  let diag [len] (X:[len]t) =
     let elem = len ** 2
     let index  = map (\x -> x * len + x) (0..<len)
     let retval = scatter (replicate elem R.(i32 0)) index X
    in unflatten len len retval
 
-  let extract_diag (X:[][]t) =
-    let len = length X
+  let extract_diag [len] (X:[len][len]t) =
     let X_flat = flatten X
     let index = map (\x -> x * len + x) (0..<len)
     let retval = unsafe map (\i -> X_flat[i] ) (index)

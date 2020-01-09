@@ -9,11 +9,11 @@ module type activations = {
 
   type t
 
-  val Identity_1d: activation_func ([]t)
-  val Sigmoid_1d:  activation_func ([]t)
-  val Relu_1d:     activation_func ([]t)
-  val Tanh_1d:     activation_func ([]t)
-  val Softmax_1d:  activation_func ([]t)
+  val Identity_1d [n]: activation_func ([n]t)
+  val Sigmoid_1d [n]:  activation_func ([n]t)
+  val Relu_1d [n]:     activation_func ([n]t)
+  val Tanh_1d [n]:     activation_func ([n]t)
+  val Softmax_1d [n]:  activation_func ([n]t)
 
 }
 

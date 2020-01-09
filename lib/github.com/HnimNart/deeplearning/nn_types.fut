@@ -8,18 +8,20 @@ type NN 'input 'w 'output 'c 'e_in 'e_out '^u =
                  weights : w}
 
 --- Commonly used types
-type arr1d 't = []t
-type arr2d 't = [][]t
-type arr3d 't = [][][]t
-type arr4d 't = [][][][]t
+type arr1d [n] 't = [n]t
+type arr2d [n][m] 't = [n][m]t
+type arr3d [n][m][p] 't = [n][m][p]t
+type arr4d [n][m][p][q] 't = [n][m][p][q]t
 
 type dims2d  = (i32, i32)
 type dims3d  = (i32, i32, i32)
 
 --- The 'standard' weight definition
 --- used by optimizers
-type std_weights 't = ([][]t, []t)
-type apply_grad 't  = std_weights t -> std_weights t -> std_weights t
+type std_weights [a][b][c] 't = ([a][b]t, [c]t)
+type apply_grad [a][b][c] 't = std_weights [a][b][c] t -> std_weights [a][b][c] t -> std_weights [a][b][c] t
+type apply_grad2 'x 'y = (x, y) -> (x, y) -> (x, y)
+
 
 --- Function pairs
 --- Denotes a function and it's derivative

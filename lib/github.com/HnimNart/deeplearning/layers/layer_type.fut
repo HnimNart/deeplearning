@@ -5,18 +5,18 @@ module type layer_type = {
 
   type t
 
-  type input_params
-  type ^activations
+--  type input_params
+--  type^ activations
 
-  type input
-  type output
-  type weights
+--  type input
+--  type output
+  type^ weights
   type error_in
   type error_out
-  type cache
+  type^ cache
 
   --- Initialize layer given input params
-  val init: input_params -> activations -> i32 ->
-         NN input weights output cache error_in error_out (apply_grad t)
+--  val init [a][b]: input_params -> activations -> i32 ->
+--         NN input weights output cache error_in error_out (apply_grad [a][b][a] t)
 
 }
