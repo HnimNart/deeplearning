@@ -4,7 +4,7 @@ import "../lib/github.com/HnimNart/deeplearning/util"
 module dl = deep_learning f64
 module util = utility f64
 
-let dense = dl.layers.dense (4,3) dl.nn.identity 1
+let dense = dl.layers.dense 4 3 dl.nn.identity 1
 
 let apply_grad_gd (alpha:f64)
                   (batch_size:i32)
@@ -22,7 +22,7 @@ let apply_grad_gd (alpha:f64)
 
   in (w', b')
 
-let updater = (apply_grad_gd 0.1 1)
+let updater _ _ = (apply_grad_gd 0.1 1)
 
 
 
@@ -42,8 +42,8 @@ let updater = (apply_grad_gd 0.1 1)
 --          [ 41.0,  98.0, 155.0],
 --          [ 51.0, 124.0, 197.0]]}
 
-entry dense_fwd input w b =
-  let (_, output) = dense.forward false (w,b) input
+entry dense_fwd [K] (input: [K][]f64) w b =
+  let (_, output) = dense.forward K false (w,b) input
   in output
 
 -- ==
@@ -62,9 +62,9 @@ entry dense_fwd input w b =
 --          [2.0, 3.0, 4.0, 5.0],
 --          [3.0, 4.0, 5.0, 6.0]]}
 
-entry dense_cache_1 input w b =
-  let (cache, _) = dense.forward true (w,b) input
-  in cache.1
+entry dense_cache_1 [K] (input: [K][]f64) w b =
+  let (cache, _) = dense.forward K true (w,b) input
+  in map (.1) cache
 
 -- == -- entry: dense_cache_2
 -- input {[[1.0, 2.0, 3.0, 4.0],
@@ -81,10 +81,9 @@ entry dense_cache_1 input w b =
 --          [41.0,  98.0,  155.0],
 --          [51.0, 124.0,  197.0]]}
 
-entry dense_cache_2 input w b =
-  let (cache, _) = dense.forward true (w,b) input
-  in cache.1
-
+entry dense_cache_2 [K] (input: [K][]f64) w b =
+  let (cache, _) = dense.forward K true (w,b) input
+  in map (.1) cache
 
 -- ==
 -- entry: dense_bwd_err
@@ -102,9 +101,9 @@ entry dense_cache_2 input w b =
 --          [1926.0, 2220.0, 2514.0, 2808.0],
 --          [2444.0, 2816.0, 3188.0, 3560.0]] }
 
-entry dense_bwd_err input w b =
-  let (cache, output) = dense.forward true (w,b) input
-  let (err, _) = dense.backward false updater (w,b) cache output in err
+entry dense_bwd_err [K] (input: [K][]f64) w b =
+  let (cache, output) = dense.forward K true (w,b) input
+  let (err, _) = dense.backward K false updater (w,b) cache output in err
 
 
 -- ==
@@ -124,9 +123,9 @@ entry dense_bwd_err input w b =
 --          [-92.40, -137.90, -183.40, -228.90]]}
 
 
-entry dense_bwd_dW input w b =
-  let (cache, output) = dense.forward true (w,b) input
-  let (_, (w',_)) = dense.backward false updater (w,b) cache output
+entry dense_bwd_dW [K] (input: [K][]f64) w b =
+  let (cache, output) = dense.forward K true (w,b) input
+  let (_, (w',_)) = dense.backward K false updater (w,b) cache output
   in w'
 
 -- ==
@@ -143,7 +142,7 @@ entry dense_bwd_dW input w b =
 --
 -- output {[-11.30, -27.40, -43.50]}
 
-entry dense_bwd_dB input w b =
-  let (cache, output) = dense.forward true (w,b) input
-  let (_, (_,b')) = dense.backward false updater (w,b) cache output
+entry dense_bwd_dB [K] (input: [K][]f64) w b =
+  let (cache, output) = dense.forward K true (w,b) input
+  let (_, (_,b')) = dense.backward K false updater (w,b) cache output
   in b'

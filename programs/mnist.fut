@@ -12,14 +12,14 @@ module dl = deep_learning f32
 
 let seed = 1
 
-let l1 = dl.layers.dense (784, 256) dl.nn.identity seed
-let l2 = dl.layers.dense (256, 256) dl.nn.identity seed
-let l3 = dl.layers.dense (256, 10) dl.nn.identity seed
+let l1 : dense_layer [784] [256] f32 = dl.layers.dense 784 256 dl.nn.identity seed
+let l2 : dense_layer [256] [256] f32 = dl.layers.dense 256 256 dl.nn.identity seed
+let l3 = dl.layers.dense 256 10 dl.nn.identity seed
 
 let nn0 = dl.nn.connect_layers l1 l2
 let nn  = dl.nn.connect_layers nn0 l3
 
-let main [m] (batch_size: i32) (input:[m][]dl.t) (labels:[m][]dl.t) =
+let main [K] (batch_size: i32) (input:[K][784]dl.t) (labels: [K][10]dl.t) =
   let train = 64000
   let validation = 10000
   let alpha = 0.1

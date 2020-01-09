@@ -13,10 +13,11 @@ module gradient_descent (R:real) : optimizer_type
 
   module util = utility R
 
-  let apply_grad_gd (alpha:learning_rate)
+  let apply_grad_gd [n][m]
+                    (alpha:learning_rate)
                     (batch_size:i32)
-                    ((w,b):(std_weights t))
-                    ((wg,bg):(std_weights t)) =
+                    ((w,b): (std_weights [m][n] [m] t))
+                    ((wg,bg): (std_weights [m][n] [m] t)) =
 
     let wg_mean   = map (map R.((/i32 batch_size))) wg
     let bg_mean   = map (R.((/i32 batch_size))) bg
@@ -29,23 +30,24 @@ module gradient_descent (R:real) : optimizer_type
 
     in (w', b')
 
-  let train [n] 'w 'g 'o 'e2 'i ({forward=f,
-                                  backward=b,
-                                  weights=w}:NN ([]i) w ([]o) g ([]o) e2 (apply_grad t))
-                                (alpha:learning_rate)
-                                (input:[n]i)
-                                (labels:[n]o)
-                                (batch_sz: i32)
-                                ({f=_, fd=loss'}:loss_func o t) =
+  let train [n][m][K] 'w 'g 'o 'e2 'i
+            ({forward=f,
+              backward=b,
+              weights=w}:NN ([n]i) w ([m]o) g ([m]o) e2 (apply_grad3 t))
+            (alpha:learning_rate)
+            (input:[K][n]i)
+            (labels:[K][m]o)
+            (batch_sz: i32)
+            ({f=_, fd=loss'}:loss_func ([m]o) t) =
 
     let i = 0
-    let apply_g = apply_grad_gd alpha batch_sz
+    let apply_g _ _ = apply_grad_gd alpha batch_sz
     let (w',_) = loop (w, i) while i < length input do
-                   let input'          = input[i:i+batch_sz]
-                   let label'          = labels[i:i+batch_sz]
-                   let (cache, output) = f true w (input')
+                   let input'          = take batch_sz (drop i input)
+                   let label'          = take batch_sz (drop i labels)
+                   let (cache, output) = f batch_sz true w input'
                    let error           = map2 (\o l -> loss' o l) output label'
-                   let (_, w')         = b false apply_g w cache error
+                   let (_, w')         = b batch_sz false apply_g w cache error
                    in (w', i + batch_sz)
     in {forward = f, backward = b,  weights = w'}
 

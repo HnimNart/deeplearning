@@ -4,8 +4,6 @@ import "../util"
 import "../weight_init"
 import "../../../diku-dk/linalg/linalg"
 
-
-
 -- | 2D convolutional layer
 -- Uses GEMM method to perform convolution operation
 module conv2d (R:real) : layer_type with t = R.t
