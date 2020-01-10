@@ -10,11 +10,11 @@ module type optimizer_type = {
   --   -> batch_size -> classifier
   --   Returns the new network with updated weights
   val train [n][m][K] 'i 'w 'g 'e2 'o :
-    NN ([n]i) w ([m]o) g ([m]o) e2 (apply_grad3 t) ->
+    NN i w o g o e2 (apply_grad3 t) ->
     learning_rate ->
-    (input: [K][n]i) ->
-    (labels: [K][m]o) ->
+    (input: [K]i) ->
+    (labels: [K]o) ->
     (seed:i32) ->
-    loss_func ([m]o) t ->
-    NN ([n]i) w ([m]o) g ([m]o) e2 (apply_grad3 t)
+    loss_func o t ->
+    NN i w o g o e2 (apply_grad3 t)
 }

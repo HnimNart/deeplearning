@@ -33,12 +33,12 @@ module gradient_descent (R:real) : optimizer_type
   let train [n][m][K] 'w 'g 'o 'e2 'i
             ({forward=f,
               backward=b,
-              weights=w}:NN ([n]i) w ([m]o) g ([m]o) e2 (apply_grad3 t))
+              weights=w}:NN i w o g o e2 (apply_grad3 t))
             (alpha:learning_rate)
-            (input:[K][n]i)
-            (labels:[K][m]o)
+            (input:[K]i)
+            (labels:[K]o)
             (batch_sz: i32)
-            ({f=_, fd=loss'}:loss_func ([m]o) t) =
+            ({f=_, fd=loss'}:loss_func o t) =
 
     let i = 0
     let apply_g _ _ = apply_grad_gd alpha batch_sz
