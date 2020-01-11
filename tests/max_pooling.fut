@@ -4,8 +4,7 @@ import "../lib/github.com/HnimNart/deeplearning/util"
 module max = max_pooling_2d f64
 module util = utility f64
 
-let max_layer = max.init (2,2) () 0
-
+let max_layer = max.init 1 4 4 2 2
 
 let apply_grad_gd (alpha:f64)
                   (batch_size:i32)
@@ -34,7 +33,7 @@ let apply_grad_gd (alpha:f64)
 --            [12.0, 56.0]]]] }
 
 entry max_pooling_fwd input =
-    let (_, output) = max_layer.forward false max_layer.weights input
+    let (_, output) = max_layer.forward 1 false max_layer.weights input
      in output
 
 -- ==
@@ -47,7 +46,7 @@ entry max_pooling_fwd input =
 --            [13i32, 15i32]]]]}
 
 entry max_pooling_cache input =
-    let (cache, _) = max_layer.forward true max_layer.weights input
+    let (cache, _) = max_layer.forward 1 true max_layer.weights input
      in cache
 
 -- ==
@@ -62,6 +61,7 @@ entry max_pooling_cache input =
 --           [0.0, 12.0, 0.0, 56.0]]]] }
 
 entry max_pooling_bwd input =
-    let (c, output) = max_layer.forward true max_layer.weights input
-    let (err, _)  = max_layer.backward false (apply_grad_gd f64.(0.1) 1) max_layer.weights c output
+    let (c, output) = max_layer.forward 1 true max_layer.weights input
+    let updater _ _ = apply_grad_gd 0.1 1
+    let (err, _)  = max_layer.backward 1 false updater max_layer.weights c output
      in err

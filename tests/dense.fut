@@ -22,9 +22,7 @@ let apply_grad_gd (alpha:f64)
 
   in (w', b')
 
-let updater _ _ = (apply_grad_gd 0.1 1)
-
-
+let updater _ _ = apply_grad_gd 0.1 1
 
 -- ==
 -- entry: dense_fwd

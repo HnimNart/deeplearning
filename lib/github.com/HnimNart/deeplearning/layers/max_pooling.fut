@@ -1,32 +1,23 @@
 import "../nn_types"
 import "layer_type"
 
+type max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] 't =
+  NN ([nlayer][input_m][input_n]t) () ([nlayer][output_m][output_n]t)
+     ([nlayer][output_m][output_n]i32)
+     ([nlayer][output_m][output_n]t)
+     ([nlayer][input_m][input_n]t)
+     (apply_grad3 t)
 
 -- | Max pooling 2d
-module max_pooling_2d (R:real) : layer_type with t = R.t
-                                            with input_params = (i32 , i32)
-                                            with activations = ()
-                                            with input        = arr4d R.t
-                                            with output       = arr4d R.t
-                                            with error_in     = arr4d R.t
-                                            with error_out    = arr4d R.t = {
+module max_pooling_2d (R:real) : {
+  type t = R.t
+  val init : (nlayer: i32)
+          -> (input_m: i32) -> (input_n: i32)
+          -> (output_m: i32) -> (output_n: i32)
+          -> max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] t
+} = {
 
   type t = R.t
-  type input        = arr4d t
-  type weights      = ()
-  type output       = arr4d t
-  type cache        = arr4d (i32)
-  type error_in     = arr4d t
-  type error_out    = arr4d t
-  type b_output     = (error_out, weights)
-
-  type input_params = (i32, i32)
-  type activations  = ()
-  type max_pool     = NN input weights output
-                      cache error_in error_out (apply_grad t)
-
-  let empty_cache : cache     = [[[[]]]]
-  let empty_error : error_out = [[[[]]]]
 
   --- Finds the maximum value given an matrix
   --- and returns the indexs and the value
@@ -43,13 +34,16 @@ module max_pooling_2d (R:real) : layer_type with t = R.t
 
 
   --- Forward propegate
-  let forward ((w_m,w_n):(i32, i32))
+  let forward [k][nlayer][input_m][input_n]
+              (output_m: i32) (output_n: i32)
               (training:bool)
-              (_:weights)
-              (input:input) : (cache, output) =
+              ()
+              (input: [k][nlayer][input_m][input_n]t)
+            : ([k][nlayer][output_m][output_n]i32,
+               [k][nlayer][output_m][output_n]t) =
 
-    let (input_m, input_n)    = (length input[0,0], length input[0,0,0])
-    let (output_m, output_n)  = (input_m/w_m, input_n/w_n)
+    let w_m = input_m / output_m
+    let w_n = input_n / output_n
     let ixs = map (\x -> x * w_m) (0..<output_m)
     let jxs = map (\x -> x * w_n) (0..<output_n)
     let (offsets, output) =
@@ -62,43 +56,36 @@ module max_pooling_2d (R:real) : layer_type with t = R.t
                             let offset = (input_m * (i'+i) + (j'+j))
                             in (offset, res)) jxs)) ixs)) image)) input)
 
-    let cache = if training then
-                 offsets
-                 else
-                 copy empty_cache
+    let cache = offsets
     in (cache, output)
 
   -- Back propegate by up-sample
-  let backward ((m,n): (i32, i32))
+  let backward [k][nlayer][output_m][output_n]
+               (input_m: i32) (input_n: i32)
                (first_layer:bool)
-               (_:apply_grad t)
-               (_:weights)
-               (idx:cache)
-               (error:error_in): (error_out, weights) =
+               _
+               _
+               (idx: [k][nlayer][output_m][output_n]i32)
+               (error: [k][nlayer][output_m][output_n]t)
+             : ([k][nlayer][input_m][input_n]t, ()) =
 
-    if first_layer then
-      (copy empty_error, ())
-    else
-      --- Recreate dimensions and create buffers
-      let (layer_m, layer_n) = (length idx[0,0], length idx[0,0,0])
-      let (height, width)    = (layer_m * m , layer_n * n)
-      let total_elem         = height * width
-      let retval             = map (\_ -> R.(i32 0)) (0..<(total_elem))
-      let idx_flat           =
-        map (\image -> map (\layer -> flatten layer) image) idx
-      let error_flat         =
-        map (\image -> map (\layer -> flatten layer) image) error
-      --- Write values back to their place
-      let error'       =
-        map2 (\ix_img err_img ->
-              map2 (\i e ->
-                    scatter (copy retval) i e) ix_img err_img) idx_flat error_flat
-      in (map (\image -> map (\x -> unflatten height width x) image) error', ())
+    let total_elem         = output_m * output_n
+    let retval             = replicate (input_m*input_n) (R.i32 0)
+    let idx_flat           = map (map (\arr -> flatten arr : [total_elem]i32)) idx
+    let error_flat         = map (map (\arr -> flatten arr : [total_elem]t)) error
+    --- Write values back to their place
+    let error'       =
+      map2 (\ix_img err_img ->
+            map2 (\i e ->
+                  scatter (copy retval) i e) ix_img err_img) idx_flat error_flat
+    in (map (\image -> map (unflatten input_m input_n) image) error', ())
 
-
-  let init ((m,n):(i32, i32)) (_:activations) (_: i32) : max_pool =
-    {forward  = forward (m,n),
-     backward = backward (m,n),
+  let init (nlayer: i32)
+           (input_m: i32) (input_n: i32)
+           (output_m: i32) (output_n: i32)
+         : max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] t =
+    {forward  = \_ -> forward output_m output_n,
+     backward = \_ -> backward input_m input_n,
      weights  = ()}
 
 }

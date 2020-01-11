@@ -19,7 +19,6 @@ type dims3d  = (i32, i32, i32)
 --- The 'standard' weight definition
 --- used by optimizers
 type std_weights [a][b][c] 't = ([a][b]t, [c]t)
-type apply_grad [a][b][c] 't = std_weights [a][b][c] t -> std_weights [a][b][c] t -> std_weights [a][b][c] t
 type apply_grad2 'x 'y = (x, y) -> (x, y) -> (x, y)
 type apply_grad3 't = (a: i32) -> (b: i32) -> apply_grad2 ([a][b]t) ([a]t)
 

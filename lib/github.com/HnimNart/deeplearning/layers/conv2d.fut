@@ -15,98 +15,113 @@ module conv2d (R:real) : layer_type with t = R.t
                                     with error_out    = arr4d R.t = {
 
   type t = R.t
-  type input        = arr4d  t
-  type weights      = std_weights t
-  type output       = arr4d t
-  type dims         = dims3d
-  type cache        = (dims, arr3d t, arr4d t)
-  type error_in     = arr4d t
-  type error_out    = arr4d t
-  type b_output     = (error_out, weights)
+  -- type input        = arr4d  t
+  -- type weights      = std_weights t
+  -- type output       = arr4d t
+  -- type dims         = dims3d
+  -- type cache        = (dims, arr3d t, arr4d t)
+  -- type error_in     = arr4d t
+  -- type error_out    = arr4d t
+  -- type b_output     = (error_out, weights)
 
-  type input_params = (i32 ,i32, i32, i32)
-  type activations  = activation_func ([]R.t)
+  -- type input_params = (i32 ,i32, i32, i32)
+  -- type activations  = activation_func ([]R.t)
 
   module lalg   = mk_linalg R
   module util   = utility R
   module w_init = weight_initializer R
 
-  let zero_dims: dims = (0,0,0)
-  let empty_cache: cache = (zero_dims, [[[]]], [[[[]]]])
-  let empty_error: error_out = [[[[]]]]
+  let zero_dims = (0,0,0)
 
   -- Calculate offsets in img, given window size and stride
-  let calc_img_offsets (stride:i32) ((m,n):(i32, i32)): [](i32, i32) =
+  let calc_img_offsets (mn: i32) (stride:i32) ((m,n):(i32, i32)): [mn](i32, i32) =
     let row_offsets = map (\i -> i * stride) (0..<m)
     let col_offsets = map (\i -> i * stride) (0..<n)
     in flatten (map (\i -> map (\j -> (i,j) ) row_offsets) col_offsets)
+       : [mn](i32,i32)
 
   --- Add zero padding around a 2D img
-  let add_padding [m][n] (padding:i32) (X:[m][n]t) : arr2d t =
-    let (output_m , output_n)  = (m + padding * 2, n + padding * 2)
+  let add_padding [m][n] (padding:i32) (output_m: i32) (output_n: i32) (X:[m][n]t)
+                       : [output_m][output_n]t =
+--    let (output_m , output_n)  = (m + padding * 2, n + padding * 2)
     let tot_elem               = output_m * output_n
 
+    let mn = m * n
+    let flatten_mn 'a (arr: [][]a) = flatten arr : [mn]a
     let index    =
-      flatten (map (\i -> (map (\j -> (i,j)) (0..<m))) (0..<n))
+      flatten_mn (map (\i -> (map (\j -> (i,j)) (0..<m))) (0..<n))
     let offsets  =
       map (\(i,j) -> padding*output_n + padding + output_m * i + j) index
     let retval   =
-      scatter (map (\_ -> R.(i32 0)) (0..<tot_elem)) (offsets) (flatten X)
+      scatter (map (\_ -> R.(i32 0)) (0..<tot_elem)) offsets (flatten_mn X)
     in unflatten output_m output_n retval
 
   -- Transforms 3D imgage to column matrix
   -- for convolutional op
-  let im2col (x:arr3d t)
+  let im2col [p][m][n] [l]
+             (x: [p][m][n]t)
              ((w_m, w_n):(i32, i32))
-             (idx:arr1d  (i32, i32)) : arr2d t =
-    unsafe transpose (map (\(i,j) ->
-                          flatten (map (\layer ->
-                                       flatten layer[i:i+w_m, j:j+w_n]) x)) idx)
+             (pwtotal: i32)
+             (idx: [l](i32, i32)) : [pwtotal][l]t =
+    let wtotal = w_m * w_n
+    in unsafe transpose (map (\(i,j) ->
+                                flatten (map (\layer ->
+                                                flatten layer[i:i+w_m, j:j+w_n]
+                                                : [wtotal]t)
+                                             x)
+                                : [pwtotal]t)
+                             idx)
 
-  let forward (act:[]t -> []t)
-              ((w_m, w_n):(i32, i32))
+  let forward [k][pwtotal]
+              (p: i32) (m: i32) (n: i32)
+              (out_m: i32) (out_n: i32)
+              (out_mn: i32)
+              (act: [out_mn]t -> [out_mn]t)
+              ((w_m, w_n): (i32, i32))
               (stride:i32)
               (training:bool)
-              ((w,b):weights)
-              (input:input) : (cache, output) =
+              ((w,b): std_weights [p][pwtotal] [p] t)
+              (input: [k][p][m][n]t)
+            : ([k]([pwtotal][out_mn]t, [p][out_m][out_n]t),
+               [k][p][out_m][out_n]t) =
 
-    let (x_p, x_m, x_n) = (length input[0], length input[0,0], length input[0,0,0])
-    let (out_m, out_n)  = (((x_m - w_m)/ stride) + 1, ((x_n - w_n)/stride) + 1)
-    let img_offsets     = calc_img_offsets stride (out_m, out_n)
-    let image_matrix    = map (\image -> im2col image (w_m,w_n) img_offsets) input
-    let res             = map (\image -> (lalg.matmul w image) ) image_matrix
+    let img_offsets     = calc_img_offsets out_mn stride (out_m, out_n)
+    let image_matrix    = map (\image -> im2col image (w_m,w_n) pwtotal img_offsets) input
+    let res : [k][p][out_mn]t = map (lalg.matmul w) image_matrix
     let res_bias        =
       map (\image -> map2 (\layer b' -> map (\x -> R.(x + b')) layer) image b) res
 
-    let res_act         = map (\image ->
-                               map (\layer -> act layer ) image) res_bias
-    let cache           = if training then
-                            let res_bias' =
-                              map (\inp ->
+    let res_act         = map (map act) res_bias
+    let cache           = let res_bias' =
+                            map (\inp ->
                                    map (\x ->
-                                        unflatten out_m out_n x) inp) res_bias
-                            in ((x_p, x_m, x_n), image_matrix, res_bias')
-                          else empty_cache
+                                          unflatten out_m out_n x) inp) res_bias
+                          in zip image_matrix res_bias'
     let output = map (\inp -> map (\x -> unflatten out_m out_n x) inp) res_act
     in (cache, output)
 
 
-  let backward (act:[]t->[]t)
-               (k:i32)
+  let backward [k][pwtotal]
+               (p: i32) (m: i32) (n: i32)
+               (out_m: i32) (out_n: i32)
+               (out_mn: i32)
+               (act: [out_n]t -> [out_n]t)
+               (filter_d:i32)
                (stride:i32)
                (first_layer:bool)
-               (apply_grads:apply_grad t)
-               ((w,b): weights)
-               ((dims, img_matrix, res_bias):cache)
-               (error:error_in) : b_output =
+               (apply_grads: apply_grad3 t)
+               ((w,b): std_weights [p][pwtotal] [p] t)
+               ((cache: [k]([pwtotal][out_mn]t, [p][out_m][out_n]t)))
+               (error: [k][p][out_m][out_n]t)
+             : (bool, std_weights [p][pwtotal] [p] t) =
 
-    let (x_p, x_m, x_n) = dims
+    let (img_matrix, res_bias) = unzip cache
     let res_deriv       = map (\image ->
                                map (\layer ->
                                     map (\row -> act row) layer) image) res_bias
     let delta           = util.hadamard_prod_4d error res_deriv
 
-    let delta_flat      = map (\img -> map (\layer -> flatten layer) img) delta
+    let delta_flat      = map (\img -> map (\layer -> flatten layer : [out_mn]t) img) delta
     let grads_w         =
       map2 (\img d ->
             transpose (lalg.matmul img (transpose d))) img_matrix delta_flat
@@ -117,27 +132,23 @@ module conv2d (R:real) : layer_type with t = R.t
       map (\img -> map (\layer -> R.sum (flatten layer) ) img) delta
     let grad_b    = map (R.sum) (transpose grads_b)
 
-    let (w', b')  = apply_grads (w,b) (grad_w, grad_b)
+    let (w', b')  = apply_grads p pwtotal (w,b) (grad_w, grad_b)
 
     --- Calc error for previous layer ----
     let error' =
-      if first_layer
-      then
-        copy empty_error
-      else
-        let filter_sz    = k * k
-        let w_offsets    = map (\i -> i * filter_sz) (0..<x_p)
-        let w_flipped    =
-          unsafe map (\i ->
-                      flatten ((map (\r ->
-                                     reverse (r[i:i+filter_sz])) w))) w_offsets
-        let delta_padded  =
-          map (\delta' -> map (\x -> add_padding (k-1) x) delta') delta
-        let delta_offsets = calc_img_offsets stride (x_m, x_n)
-        let delta_matrix  =
-          map (\delta' -> im2col delta' (k,k) delta_offsets) delta_padded
-        let error         = map (\delta' -> lalg.matmul w_flipped delta') delta_matrix
-        in map (\img -> map (\x -> (unflatten x_m x_n x)) img ) error
+      let filter_sz    = filter_d * filter_d
+      let w_offsets    = map (\i -> i * filter_sz) (0..<p)
+      let w_flipped    =
+        unsafe map (\i ->
+                    flatten ((map (\r ->
+                                   reverse (r[i:i+filter_sz]) : [filter_sz]t) w))) w_offsets
+      let delta_padded  =
+        map (\delta' -> map (\x -> add_padding (filter_d-1) x) delta') delta
+      let delta_offsets = calc_img_offsets stride (m, n)
+      let delta_matrix  =
+        map (\delta' -> im2col delta' (filter_d,filter_d) delta_offsets) delta_padded
+      let error         = map (\delta' -> lalg.matmul w_flipped delta') delta_matrix
+      in map (\img -> map (\x -> (unflatten m n x)) img ) error
     in (error' , (w',b'))
 
 

@@ -30,7 +30,7 @@ module gradient_descent (R:real) : optimizer_type
 
     in (w', b')
 
-  let train [n][m][K] 'w 'g 'o 'e2 'i
+  let train [K] 'w 'g 'o 'e2 'i
             ({forward=f,
               backward=b,
               weights=w}:NN i w o g o e2 (apply_grad3 t))
