@@ -18,7 +18,7 @@ let identity (d: i32) : activation_func ([d]dl.t) =
 let relu (d: i32) : activation_func ([d]dl.t) =
   dl.nn.relu : activation_func ([d]dl.t)
 
-let conv1     = dl.layers.conv2d 1 28 28 5 3 32 24 24 relu seed
+let conv1     = dl.layers.conv2d 1 28 28 5 1 32 24 24 relu seed
 let max_pool1 = dl.layers.max_pooling2d 32 24 24 12 12
 let conv2     = dl.layers.conv2d 32 12 12 3 1 64 10 10 relu seed
 let max_pool2 = dl.layers.max_pooling2d 64 10 10 5 5
