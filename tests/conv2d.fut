@@ -20,7 +20,8 @@ let apply_grad_gd (alpha:f64)
 
   in (w', b')
 
-let updater _ _ = apply_grad_gd 0.1 1
+let updater a b (x: ([a][b]f64, [a]f64)) (y: ([a][b]f64, [a]f64)) : ([a][b]f64, [a]f64) =
+  apply_grad_gd 0.1 1 x y
 
 let act (d: i32) : activation_func ([d]f64) =
   dl.nn.identity : activation_func ([d]f64)

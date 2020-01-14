@@ -34,7 +34,8 @@ module max_pooling_2d (R:real) : {
 
 
   --- Forward propegate
-  let forward [k][nlayer][input_m][input_n]
+  let forward [nlayer][input_m][input_n]
+              (k: i32)
               (output_m: i32) (output_n: i32)
               (training:bool)
               ()
@@ -60,7 +61,8 @@ module max_pooling_2d (R:real) : {
     in (cache, output)
 
   -- Back propegate by up-sample
-  let backward [k][nlayer][output_m][output_n]
+  let backward [nlayer][output_m][output_n]
+               (k: i32)
                (input_m: i32) (input_n: i32)
                (first_layer:bool)
                _
@@ -84,8 +86,8 @@ module max_pooling_2d (R:real) : {
            (input_m: i32) (input_n: i32)
            (output_m: i32) (output_n: i32)
          : max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] t =
-    {forward  = \_ -> forward output_m output_n,
-     backward = \_ -> backward input_m input_n,
+    {forward  = \k -> forward k output_m output_n,
+     backward = \k -> backward k input_m input_n,
      weights  = ()}
 
 }

@@ -67,8 +67,8 @@ module conv2d (R:real) : {
                          : [pwtotal]t)
                       idx)
 
-  let forward [k][filter_d][filters]
-              (p: i32) (m: i32) (n: i32)
+  let forward [filter_d][filters]
+              (k: i32) (p: i32) (m: i32) (n: i32)
               (out_m: i32) (out_n: i32)
               (out_mn: i32)
               (act: [out_mn]t -> [out_mn]t)
@@ -100,8 +100,8 @@ module conv2d (R:real) : {
     in (cache, output)
 
 
-  let backward [k][filter_d][filters]
-               (p: i32) (m: i32) (n: i32)
+  let backward [filter_d][filters]
+               (k: i32) (p: i32) (m: i32) (n: i32)
                (out_m: i32) (out_n: i32)
                (out_mn: i32)
                (act: [out_n]t -> [out_n]t)
@@ -174,8 +174,8 @@ module conv2d (R:real) : {
     let out_mn = out_m * out_n
     let w = w_init.gen_random_array_2d_xavier_uni pwtotal filters seed
     let b = replicate filters R.(i32 0)
-    in {forward  = \_ -> forward p m n out_m out_n out_mn (act out_mn).f (filter_d, filter_d) stride,
-        backward = \_ -> backward p m n out_m out_n out_mn (act out_n).fd stride,
+    in {forward  = \k -> forward k p m n out_m out_n out_mn (act out_mn).f (filter_d, filter_d) stride,
+        backward = \k -> backward k p m n out_m out_n out_mn (act out_n).fd stride,
         weights  = (map (unflatten_3d p filter_d filter_d) w,
                     b)}
 }

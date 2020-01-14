@@ -13,9 +13,9 @@ module gradient_descent (R:real) : optimizer_type
 
   module util = utility R
 
-  let apply_grad_gd [n][m]
-                    (alpha:learning_rate)
+  let apply_grad_gd (alpha:learning_rate)
                     (batch_size:i32)
+                    (m: i32) (n: i32)
                     ((w,b): (std_weights [m][n] [m] t))
                     ((wg,bg): (std_weights [m][n] [m] t)) =
 
@@ -41,7 +41,7 @@ module gradient_descent (R:real) : optimizer_type
             ({f=_, fd=loss'}:loss_func o t) =
 
     let i = 0
-    let apply_g _ _ = apply_grad_gd alpha batch_sz
+    let apply_g = apply_grad_gd alpha batch_sz
     let (w',_) = loop (w, i) while i < length input do
                    let input'          = take batch_sz (drop i input)
                    let label'          = take batch_sz (drop i labels)

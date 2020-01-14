@@ -24,7 +24,7 @@ module dense (R:real) : { type t = R.t
   module w_init = weight_initializer R
 
   -- Forward propagation
-  let forward [k]
+  let forward (k: i32)
               (n: i32) (m: i32)
               (act: [n]t -> [n]t)
               (training:bool)
@@ -38,7 +38,7 @@ module dense (R:real) : { type t = R.t
     in (cache, res_act)
 
   -- Backward propagation
-  let backward [k]
+  let backward (k: i32)
                (n: i32) (m: i32)
                (act: [n]t -> [n]t)
                (first_layer:bool)
@@ -63,8 +63,8 @@ module dense (R:real) : { type t = R.t
     let w = w_init.gen_random_array_2d_xavier_uni m n seed
     let b = map (\_ -> R.(i32 0)) (0..<n)
     in
-    {forward  = \_k -> forward n m act.f,
-     backward = \_k -> backward n m act.fd,
+    {forward  = \k -> forward k n m act.f,
+     backward = \k -> backward k n m act.fd,
      weights  = (w,b)}
 
 }

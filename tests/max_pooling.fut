@@ -22,6 +22,8 @@ let apply_grad_gd (alpha:f64)
 
   in (w', b')
 
+let updater a b (x: ([a][b]f64, [a]f64)) (y: ([a][b]f64, [a]f64)) : ([a][b]f64, [a]f64) =
+  apply_grad_gd 0.1 1 x y
 
 -- ==
 -- entry: max_pooling_fwd
@@ -62,6 +64,5 @@ entry max_pooling_cache input =
 
 entry max_pooling_bwd input =
     let (c, output) = max_layer.forward 1 true max_layer.weights input
-    let updater _ _ = apply_grad_gd 0.1 1
     let (err, _)  = max_layer.backward 1 false updater max_layer.weights c output
      in err

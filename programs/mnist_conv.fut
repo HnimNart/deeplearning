@@ -18,20 +18,15 @@ let identity (d: i32) : activation_func ([d]dl.t) =
 let relu (d: i32) : activation_func ([d]dl.t) =
   dl.nn.relu : activation_func ([d]dl.t)
 
-let conv1     = dl.layers.conv2d 1 28 28 5 1 32 24 24 relu seed
-let max_pool1 = dl.layers.max_pooling2d 32 24 24 12 12
-let conv2     = dl.layers.conv2d 32 12 12 3 1 64 10 10 relu seed
-let max_pool2 = dl.layers.max_pooling2d 64 10 10 5 5
-let flat      = dl.layers.flatten 64 5 5 1600
-let fc        = dl.layers.dense 1600 1024 dl.nn.identity seed
-let output    = dl.layers.dense 1024 10 dl.nn.identity seed
+let (>>) = dl.nn.connect_layers
 
-let nn0   = dl.nn.connect_layers conv1 max_pool1
-let nn1   = dl.nn.connect_layers nn0 conv2
-let nn2   = dl.nn.connect_layers nn1 max_pool2
-let nn3   = dl.nn.connect_layers nn2 flat
-let nn4   = dl.nn.connect_layers nn3 fc
-let nn    = dl.nn.connect_layers nn4 output
+let nn = dl.layers.conv2d 1 28 28 5 1 32 24 24 relu seed
+         >> dl.layers.max_pooling2d 32 24 24 12 12
+         >> dl.layers.conv2d 32 12 12 3 1 64 10 10 relu seed
+         >> dl.layers.max_pooling2d 64 10 10 5 5
+         >> dl.layers.flatten 64 5 5 1600
+         >> dl.layers.dense 1600 1024 dl.nn.identity seed
+         >> dl.layers.dense 1024 10 dl.nn.identity seed
 
 let main [m] (batch_size: i32) (input: [m][]dl.t) (labels: [m][]dl.t) =
   let input' = map (\img -> [unflatten 28 28 img]) input
