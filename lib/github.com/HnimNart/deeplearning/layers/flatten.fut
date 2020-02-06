@@ -1,7 +1,7 @@
 import "../nn_types"
 import "layer_type"
 
-type flatten_layer [m][a][b] [n] 't =
+type^ flatten_layer [m][a][b] [n] 't =
     NN ([m][a][b]t) () ([n]t)
        () ([n]t) ([m][a][b]t)
        (apply_grad3 t)
@@ -15,7 +15,7 @@ module flatten (R:real) : {
 
   let forward [m][a][b] 't
               (k: i32) (n: i32) (training: bool) () (input: [k][m][a][b]t) : ([k](), [k][n]t) =
-    (replicate k (), map (\image -> flatten_3d image : [n]t) input)
+    (replicate k (), map (\image -> flatten_3d image :> [n]t) input)
 
   let backward (k: i32) (m: i32) (a: i32) (b: i32) (n: i32)
                (first_layer:bool)

@@ -4,7 +4,7 @@ import "../lib/github.com/HnimNart/deeplearning/util"
 module dl = deep_learning f64
 module util = utility f64
 
-let dense = dl.layers.dense 4 3 dl.nn.identity 1
+let dense = dl.layers.dense 4 3 (dl.nn.identity 3) 1
 
 let apply_grad_gd (alpha:f64)
                   (batch_size:i32)

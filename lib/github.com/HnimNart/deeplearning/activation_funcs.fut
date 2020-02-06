@@ -9,11 +9,11 @@ module type activations = {
 
   type t
 
-  val Identity_1d [n]: activation_func ([n]t)
-  val Sigmoid_1d [n]:  activation_func ([n]t)
-  val Relu_1d [n]:     activation_func ([n]t)
-  val Tanh_1d [n]:     activation_func ([n]t)
-  val Softmax_1d [n]:  activation_func ([n]t)
+  val Identity_1d: (n: i32) -> activation_func ([n]t)
+  val Sigmoid_1d:  (n: i32) -> activation_func ([n]t)
+  val Relu_1d:     (n: i32) -> activation_func ([n]t)
+  val Tanh_1d:     (n: i32) -> activation_func ([n]t)
+  val Softmax_1d:  (n: i32) -> activation_func ([n]t)
 
 }
 
@@ -23,7 +23,7 @@ module activation_funcs (R:real) : activations with t = R.t = {
 
   module util = utility R
 
-  let identity_1d (X:[]t) : []t  =
+  let identity_1d (X:[]t) =
     X
 
   let identity_1d' [m] (_:[m]t) : [m]t =
@@ -67,19 +67,19 @@ module activation_funcs (R:real) : activations with t = R.t = {
     in map (R.sum) (retval)
 
   --- Wrappers for activations function pairs ---
-  let Identity_1d  =
+  let Identity_1d n : activation_func ([n]t) =
     {f = identity_1d, fd = identity_1d'}
 
-  let Sigmoid_1d =
+  let Sigmoid_1d n : activation_func ([n]t) =
     {f = sigmoid_1d, fd = sigmoid_1d'}
 
-  let Relu_1d =
+  let Relu_1d n : activation_func ([n]t) =
     {f = relu_1d, fd = relu_1d'}
 
-  let Tanh_1d =
+  let Tanh_1d n : activation_func ([n]t) =
     {f = tanh_1d, fd = tanh_1d'}
 
-  let Softmax_1d =
+  let Softmax_1d n : activation_func ([n]t) =
     {f = softmax_1d_stable, fd = softmax_1d_stable'}
 
 }

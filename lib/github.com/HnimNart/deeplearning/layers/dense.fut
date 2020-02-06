@@ -4,7 +4,7 @@ import "../util"
 import "../weight_init"
 import "../../../diku-dk/linalg/linalg"
 
-type dense_layer [m] [n] 't =
+type^ dense_layer [m] [n] 't =
   NN ([m]t) (std_weights [n][m] [n] t) ([n]t)
      ([m]t, [n]t) ([n]t) ([m]t)
      (apply_grad3 t)

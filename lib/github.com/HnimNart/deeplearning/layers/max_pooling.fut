@@ -1,7 +1,7 @@
 import "../nn_types"
 import "layer_type"
 
-type max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] 't =
+type^ max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] 't =
   NN ([nlayer][input_m][input_n]t) () ([nlayer][output_m][output_n]t)
      ([nlayer][output_m][output_n]i32)
      ([nlayer][output_m][output_n]t)
@@ -73,8 +73,8 @@ module max_pooling_2d (R:real) : {
 
     let total_elem         = output_m * output_n
     let retval             = replicate (input_m*input_n) (R.i32 0)
-    let idx_flat           = map (map (\arr -> flatten arr : [total_elem]i32)) idx
-    let error_flat         = map (map (\arr -> flatten arr : [total_elem]t)) error
+    let idx_flat           = map (map (\arr -> flatten_to total_elem arr)) idx
+    let error_flat         = map (map (\arr -> flatten_to total_elem arr)) error
     --- Write values back to their place
     let error'       =
       map2 (\ix_img err_img ->

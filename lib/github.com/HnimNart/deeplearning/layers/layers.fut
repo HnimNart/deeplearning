@@ -10,16 +10,16 @@ module type layers = {
   type t
 
   --- Layer types
-  type dense_tp [m] [n] =
+  type^ dense_tp [m] [n] =
     dense_layer [m] [n] t
 
-  type conv2d_tp [p][m][n] [filter_d] [filters] [out_m] [out_n] =
+  type^ conv2d_tp [p][m][n] [filter_d] [filters] [out_m] [out_n] =
     conv2d_layer [p][m][n] [filter_d] [filters] [out_m] [out_n] t
 
-  type max_pooling_tp [nlayer] [input_m][input_n] [output_m][output_n] =
+  type^ max_pooling_tp [nlayer] [input_m][input_n] [output_m][output_n] =
     max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] t
 
-  type flatten_tp [m][a][b] [n] =
+  type^ flatten_tp [m][a][b] [n] =
     flatten_layer [m][a][b] [n] t
 
   -- Simple wrappers for each layer type
@@ -50,16 +50,16 @@ module layers_coll (R:real): layers with t = R.t = {
   module flatten_layer = flatten R
 
   --- Layer types
-  type dense_tp [m] [n] =
+  type^ dense_tp [m] [n] =
     dense_layer [m] [n] t
 
-  type conv2d_tp [p][m][n] [filter_d] [filters] [out_m] [out_n] =
+  type^ conv2d_tp [p][m][n] [filter_d] [filters] [out_m] [out_n] =
     conv2d_layer [p][m][n] [filter_d] [filters] [out_m] [out_n] t
 
-  type max_pooling_tp [nlayer] [input_m][input_n] [output_m][output_n] =
+  type^ max_pooling_tp [nlayer] [input_m][input_n] [output_m][output_n] =
     max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] t
 
-  type flatten_tp [m][a][b] [n] =
+  type^ flatten_tp [m][a][b] [n] =
     flatten_layer [m][a][b] [n] t
 
   let dense = dense_layer.init

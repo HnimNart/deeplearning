@@ -40,11 +40,11 @@ module type network = {
     t
 
   --- activation function wrappers
-  val identity [n] : activation_func ([n]t)
-  val sigmoid  [n] : activation_func ([n]t)
-  val relu     [n] : activation_func ([n]t)
-  val tanh     [n] : activation_func ([n]t)
-  val softmax  [n] : activation_func ([n]t)
+  val identity : (n: i32) -> activation_func ([n]t)
+  val sigmoid  : (n: i32) -> activation_func ([n]t)
+  val relu     : (n: i32) -> activation_func ([n]t)
+  val tanh     : (n: i32) -> activation_func ([n]t)
+  val softmax  : (n: i32) -> activation_func ([n]t)
 
   --- helper functions for calculating accuracy
   val argmax [n] : [n]t -> i32

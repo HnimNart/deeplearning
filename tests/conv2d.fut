@@ -24,7 +24,7 @@ let updater a b (x: ([a][b]f64, [a]f64)) (y: ([a][b]f64, [a]f64)) : ([a][b]f64, 
   apply_grad_gd 0.1 1 x y
 
 let act (d: i32) : activation_func ([d]f64) =
-  dl.nn.identity : activation_func ([d]f64)
+  dl.nn.identity d
 
 let conv = dl.layers.conv2d 2 3 3
                             2 1 2
@@ -69,7 +69,8 @@ entry conv2d_fwd [K] (data: [K][][][]f64) w b  =
 --            [[186.0, 222.0], [294.0, 330.0]]]]}
 
 entry conv2d_cache_bias [K] (data: [K][][][]f64) w b  =
-  let (cache, _) = conv.forward K true (map (unflatten_3d 2 2 2) w,b) data in map (.2) cache
+  let (cache, _) = conv.forward K true (map (unflatten_3d 2 2 2) w,b) data
+  in map (.1) cache
 
 -- ==
 -- entry: conv2d_cache_matrix

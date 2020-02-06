@@ -13,10 +13,10 @@ module dl = deep_learning f32
 let seed = 1
 
 let identity (d: i32) : activation_func ([d]dl.t) =
-  dl.nn.identity : activation_func ([d]dl.t)
+  dl.nn.identity d
 
 let relu (d: i32) : activation_func ([d]dl.t) =
-  dl.nn.relu : activation_func ([d]dl.t)
+  dl.nn.relu d
 
 let (>>) = dl.nn.connect_layers
 
@@ -25,8 +25,8 @@ let nn = dl.layers.conv2d 1 28 28 5 1 32 24 24 relu seed
          >> dl.layers.conv2d 32 12 12 3 1 64 10 10 relu seed
          >> dl.layers.max_pooling2d 64 10 10 5 5
          >> dl.layers.flatten 64 5 5 1600
-         >> dl.layers.dense 1600 1024 dl.nn.identity seed
-         >> dl.layers.dense 1024 10 dl.nn.identity seed
+         >> dl.layers.dense 1600 1024 (dl.nn.identity 1024) seed
+         >> dl.layers.dense 1024 10 (dl.nn.identity 10) seed
 
 let main [m] (batch_size: i32) (input: [m][]dl.t) (labels: [m][]dl.t) =
   let input' = map (\img -> [unflatten 28 28 img]) input
@@ -35,8 +35,8 @@ let main [m] (batch_size: i32) (input: [m][]dl.t) (labels: [m][]dl.t) =
   let alpha = 0.1
   let nn' = dl.train.gradient_descent nn alpha
             input'[:train] labels[:train]
-            batch_size dl.loss.softmax_cross_entropy_with_logits
+            batch_size (dl.loss.softmax_cross_entropy_with_logits 10)
   in dl.nn.accuracy
      nn'
      input'[train:train+validation] labels[train:train+validation]
-     dl.nn.softmax dl.nn.argmax
+     (dl.nn.softmax 10) dl.nn.argmax

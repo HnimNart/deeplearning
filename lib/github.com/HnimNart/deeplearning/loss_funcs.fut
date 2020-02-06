@@ -8,9 +8,9 @@ import "nn_types"
 module type loss = {
   type t
 
-  val cross_entropy [n] : loss_func ([n]t) t
-  val softmax_cross_entropy_with_logits [n] :loss_func ([n]t) t
-  val sum_of_squares_error [n] : loss_func ([n]t) t
+  val cross_entropy : (n: i32) -> loss_func ([n]t) t
+  val softmax_cross_entropy_with_logits : (n: i32) -> loss_func ([n]t) t
+  val sum_of_squares_error : (n: i32) -> loss_func ([n]t) t
 }
 
 module loss_funcs (R:real) : loss with t = R.t = {
@@ -30,12 +30,12 @@ module loss_funcs (R:real) : loss with t = R.t = {
 
   let softmax_cross_entropy_with_logits_stable_1d [d] (logits:[d]t)
                                                       (labels:[d]t) =
-    let softmax_res = activations.Softmax_1d.f logits
+    let softmax_res = (activations.Softmax_1d d).f logits
     in cross_entropy_1d softmax_res labels
 
   let softmax_cross_entropy_with_logits_stable_1d' [d] (logits:[d]t)
                                                        (labels:[d]t) =
-    let softmax_res = activations.Softmax_1d.f logits
+    let softmax_res = (activations.Softmax_1d d).f logits
     in map2 (\x y -> R.(y - x)) labels softmax_res
 
   let sum_of_squares_error_1d [d] (logits:[d]t) (labels:[d]t) =
@@ -46,15 +46,15 @@ module loss_funcs (R:real) : loss with t = R.t = {
       map2 (\x y -> R.(x - y)) logits labels
 
   --- Wrappers for loss function pairs ---
-  let sum_of_squares_error =
+  let sum_of_squares_error n : loss_func ([n]t) t =
     {f  = sum_of_squares_error_1d,
      fd = sum_of_squares_error_1d'}
 
-  let softmax_cross_entropy_with_logits =
+  let softmax_cross_entropy_with_logits n : loss_func ([n]t) t =
     {f  = softmax_cross_entropy_with_logits_stable_1d,
      fd = softmax_cross_entropy_with_logits_stable_1d'}
 
-  let cross_entropy =
+  let cross_entropy n : loss_func ([n]t) t=
     {f  = cross_entropy_1d,
      fd = cross_entropy_1d'}
 

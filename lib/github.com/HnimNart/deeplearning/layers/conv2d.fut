@@ -4,7 +4,7 @@ import "../util"
 import "../weight_init"
 import "../../../diku-dk/linalg/linalg"
 
-type conv2d_layer [p][m][n] [filter_d] [filters] [out_m] [out_n] 't =
+type^ conv2d_layer [p][m][n] [filter_d] [filters] [out_m] [out_n] 't =
   NN ([p][m][n]t) ([filters][p][filter_d][filter_d]t, [filters]t) ([filters][out_m][out_n]t)
      ([p][filter_d][filter_d][out_m][out_n]t, [filters][out_m][out_n]t)
      ([filters][out_m][out_n]t)
@@ -34,21 +34,19 @@ module conv2d (R:real) : {
   let calc_img_offsets (mn: i32) (stride:i32) ((m,n):(i32, i32)): [mn](i32, i32) =
     let row_offsets = map (\i -> i * stride) (0..<m)
     let col_offsets = map (\i -> i * stride) (0..<n)
-    in flatten (map (\i -> map (\j -> (i,j) ) row_offsets) col_offsets)
-       : [mn](i32,i32)
+    in flatten_to mn (map (\i -> map (\j -> (i,j) ) row_offsets) col_offsets)
 
   --- Add zero padding around a 2D img
   let add_padding [m][n] (padding:i32) (output_m: i32) (output_n: i32) (X:[m][n]t)
                        : [output_m][output_n]t =
     let tot_elem = output_m * output_n
     let mn = m * n
-    let flatten_mn 'a (arr: [][]a) = flatten arr : [mn]a
     let index =
-      flatten_mn (map (\i -> (map (\j -> (i,j)) (0..<m))) (0..<n))
+      flatten_to mn (map (\i -> (map (\j -> (i,j)) (0..<m))) (0..<n))
     let offsets  =
       map (\(i,j) -> padding*output_n + padding + output_m * i + j) index
     let retval =
-      scatter (map (\_ -> R.(i32 0)) (0..<tot_elem)) offsets (flatten_mn X)
+      scatter (map (\_ -> R.(i32 0)) (0..<tot_elem)) offsets (flatten_to mn X)
     in unflatten output_m output_n retval
 
   -- Transforms 3D imgage to column matrix
@@ -60,11 +58,10 @@ module conv2d (R:real) : {
              (idx: [mn](i32, i32)) : [pwtotal][mn]t =
     let wtotal = w_m * w_n
     in transpose (map (\(i,j) ->
-                         flatten (map (\layer ->
-                                         flatten (unsafe layer[i:i+w_m, j:j+w_n])
-                                         : [wtotal]t)
-                                      x)
-                         : [pwtotal]t)
+                         flatten_to pwtotal
+                                    (map (\layer ->
+                                            flatten_to wtotal (unsafe layer[i:i+w_m, j:j+w_n]))
+                                         x))
                       idx)
 
   let forward [filter_d][filters]
@@ -81,7 +78,7 @@ module conv2d (R:real) : {
                [k][filters][out_m][out_n]t) =
 
     let pwtotal         = p * filter_d * filter_d
-    let w               = map (\w' -> flatten_3d w' : [pwtotal]t) w
+    let w               = map (\w' -> flatten_3d w' :> [pwtotal]t) w
     let img_offsets     = calc_img_offsets out_mn stride (out_m, out_n)
     let image_matrix    = map (\image -> im2col image (w_m,w_n) pwtotal img_offsets) input
     let res = map (lalg.matmul w) image_matrix
@@ -116,16 +113,16 @@ module conv2d (R:real) : {
 
     let pwtotal         = p * filter_d * filter_d
     let (img_matrix_nested, res_bias) = unzip cache
-    let w               = map (\w' -> flatten_3d w' : [pwtotal]t) w
+    let w               = map (\w' -> flatten_3d w' :> [pwtotal]t) w
     let img_matrix      = img_matrix_nested
-                          |> map (map (map (map (\layer -> flatten layer : [out_mn]t))))
-                          |> map (\img -> flatten_3d img : [pwtotal][out_mn]t)
+                          |> map (map (map (map (\layer -> flatten_to out_mn layer))))
+                          |> map (\img -> flatten_3d img :> [pwtotal][out_mn]t)
     let res_deriv       = map (\image ->
                                map (\layer ->
                                     map (\row -> act row) layer) image) res_bias
     let delta           = util.hadamard_prod_4d error res_deriv
 
-    let delta_flat      = map (\img -> map (\layer -> flatten layer : [out_mn]t) img) delta
+    let delta_flat      = map (\img -> map (\layer -> flatten_to out_mn layer) img) delta
     let grads_w         =
       map2 (\img d ->
             transpose (lalg.matmul img (transpose d))) img_matrix delta_flat
@@ -144,10 +141,9 @@ module conv2d (R:real) : {
       let w_offsets    = map (\i -> i * filter_sz) (0..<p)
       let filters_filter_sz  = filters * filter_sz
       let w_flipped    =
-        map (\i -> flatten (map (\r ->
-                                   reverse (unsafe r[i:i+filter_sz])
-                                   : [filter_sz]t) w)
-                   : [filters_filter_sz]t) w_offsets
+        map (\i -> flatten_to filters_filter_sz
+                   (map (\r -> reverse (unsafe r[i:i+filter_sz])
+                               :> [filter_sz]t) w)) w_offsets
       let out_m_padded = out_m+(filter_d-1)*2
       let out_n_padded = out_n+(filter_d-1)*2
       let delta_padded  =
