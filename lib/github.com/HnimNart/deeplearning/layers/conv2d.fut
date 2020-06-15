@@ -60,7 +60,7 @@ module conv2d (R:real) : {
     in transpose (map (\(i,j) ->
                          flatten_to pwtotal
                                     (map (\layer ->
-                                            flatten_to wtotal (unsafe layer[i:i+w_m, j:j+w_n]))
+                                            flatten_to wtotal layer[i:i+w_m, j:j+w_n])
                                          x))
                       idx)
 
@@ -142,7 +142,7 @@ module conv2d (R:real) : {
       let filters_filter_sz  = filters * filter_sz
       let w_flipped    =
         map (\i -> flatten_to filters_filter_sz
-                   (map (\r -> reverse (unsafe r[i:i+filter_sz])
+                   (map (\r -> reverse r[i:i+filter_sz]
                                :> [filter_sz]t) w)) w_offsets
       let out_m_padded = out_m+(filter_d-1)*2
       let out_n_padded = out_n+(filter_d-1)*2

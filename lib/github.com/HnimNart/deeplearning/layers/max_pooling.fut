@@ -24,13 +24,13 @@ module max_pooling_2d (R:real) : {
   let max_val [m][n] (input:[m][n]t) : ((i32, i32), t) =
     let inp_flat = flatten input
     let argmax   =
-      unsafe reduce (\n i ->
-                        if R.(inp_flat[n] > inp_flat[i])
-                        then n
-                        else i)
-                        0 (iota (length inp_flat))
+      reduce (\n i ->
+                 if R.(inp_flat[n] > inp_flat[i])
+                 then n
+                 else i)
+                 0 (iota (length inp_flat))
     let (i,j)    = (argmax / n, argmax % n )
-    in ((i,j), unsafe inp_flat[argmax])
+    in ((i,j), inp_flat[argmax])
 
 
   --- Forward propegate
@@ -52,7 +52,7 @@ module max_pooling_2d (R:real) : {
          unzip (map (\layer ->
                unzip (map (\i ->
                       unzip (map (\j ->
-                            let slice = unsafe layer[i:i+w_m, j:j+w_n]
+                            let slice = layer[i:i+w_m, j:j+w_n]
                             let ((i',j'), res) = max_val slice
                             let offset = (input_m * (i'+i) + (j'+j))
                             in (offset, res)) jxs)) ixs)) image)) input)

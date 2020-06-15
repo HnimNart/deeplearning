@@ -114,10 +114,10 @@ module neural_network (R:real): network with t = R.t = {
   --- Breaks if two or more values have max values?
   --- Question is which index should be chosen then?
   let argmax [n] (X:[n]t) : i32 =
-    reduce (\n i -> if unsafe R.(X[n] > X[i]) then n else i) 0 (iota n)
+    reduce (\n i -> if R.(X[n] > X[i]) then n else i) 0 (iota n)
 
   let argmin [n] (X:[n]t) : i32 =
-    reduce (\n i -> if unsafe R.(X[n] < X[i]) then n else i) 0 (iota n)
+    reduce (\n i -> if R.(X[n] < X[i]) then n else i) 0 (iota n)
 
   --- activation function wrappers
   let identity = act_funcs.Identity_1d

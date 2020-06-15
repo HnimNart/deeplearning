@@ -61,7 +61,7 @@ module utility (R:real) : {
   let extract_diag [len] (X:[len][len]t) =
     let X_flat = flatten X
     let index = map (\x -> x * len + x) (0..<len)
-    let retval = unsafe map (\i -> X_flat[i] ) (index)
+    let retval = map (\i -> X_flat[i] ) (index)
     in retval
 
 }
