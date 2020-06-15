@@ -14,11 +14,11 @@ module flatten (R:real) : {
   type t = R.t
 
   let forward [m][a][b] 't
-              (k: i32) (n: i32) (training: bool) () (input: [k][m][a][b]t) : ([k](), [k][n]t) =
+              (k: i32) (n: i32) (_training: bool) () (input: [k][m][a][b]t) : ([k](), [k][n]t) =
     (replicate k (), map (\image -> flatten_3d image :> [n]t) input)
 
   let backward (k: i32) (m: i32) (a: i32) (b: i32) (n: i32)
-               (first_layer:bool)
+               (_first_layer:bool)
                (_: apply_grad3 t)
                ()
                _

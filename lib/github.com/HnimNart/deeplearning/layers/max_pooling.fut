@@ -37,7 +37,7 @@ module max_pooling_2d (R:real) : {
   let forward [nlayer][input_m][input_n]
               (k: i32)
               (output_m: i32) (output_n: i32)
-              (training:bool)
+              (_training:bool)
               ()
               (input: [k][nlayer][input_m][input_n]t)
             : ([k][nlayer][output_m][output_n]i32,
@@ -64,7 +64,7 @@ module max_pooling_2d (R:real) : {
   let backward [nlayer][output_m][output_n]
                (k: i32)
                (input_m: i32) (input_n: i32)
-               (first_layer:bool)
+               (_first_layer:bool)
                _
                _
                (idx: [k][nlayer][output_m][output_n]i32)

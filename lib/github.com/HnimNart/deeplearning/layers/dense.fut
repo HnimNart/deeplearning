@@ -27,7 +27,7 @@ module dense (R:real) : { type t = R.t
   let forward (k: i32)
               (n: i32) (m: i32)
               (act: [n]t -> [n]t)
-              (training:bool)
+              (_training:bool)
               ((w,b): std_weights [n][m] [n] t)
               (input: [k][m]t)
             : ([k]([m]t, [n]t), [k][n]t) =
@@ -41,7 +41,7 @@ module dense (R:real) : { type t = R.t
   let backward (k: i32)
                (n: i32) (m: i32)
                (act: [n]t -> [n]t)
-               (first_layer:bool)
+               (_first_layer:bool)
                (apply_grads: apply_grad3 t)
                ((w,b): std_weights [n][m] [n] t)
                (cache: [k]([m]t, [n]t))

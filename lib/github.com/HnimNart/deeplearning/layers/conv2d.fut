@@ -71,7 +71,7 @@ module conv2d (R:real) : {
               (act: [out_mn]t -> [out_mn]t)
               ((w_m, w_n): (i32, i32))
               (stride:i32)
-              (training:bool)
+              (_training:bool)
               ((w,b): ([filters][p][filter_d][filter_d]t, [filters]t))
               (input: [k][p][m][n]t)
             : ([k]([p][filter_d][filter_d][out_m][out_n]t, [filters][out_m][out_n]t),
@@ -103,7 +103,7 @@ module conv2d (R:real) : {
                (out_mn: i32)
                (act: [out_n]t -> [out_n]t)
                (stride:i32)
-               (first_layer:bool)
+               (_first_layer:bool)
                (apply_grads: apply_grad3 t)
                ((w,b): ([filters][p][filter_d][filter_d]t, [filters]t))
                ((cache: [k]([p][filter_d][filter_d][out_m][out_n]t, [filters][out_m][out_n]t)))
