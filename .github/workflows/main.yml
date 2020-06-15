@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ master ]
+
+  push:
+    branches: [ master ]
+
+jobs:
+  test-on-nightly:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Futhark
+      run: |
+          wget http://futhark-lang.org/releases/futhark-nightly-linux-x86_64.tar.xz
+          tar xf futhark-nightly-linux-x86_64.tar.xz
+          (cd futhark-nightly-linux-x86_64/ && PREFIX=$HOME/.local make install)
+          echo "::add-path::$HOME/.local/bin"
+
+    - run: futhark pkg sync
+
+    - run: futhark test --pass-compiler-option=--Werror lib
+
+    - run: futhark pkg upgrade
+
+    - run: futhark pkg sync
+
+    - run: futhark test --pass-compiler-option=--Werror lib
