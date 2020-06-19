@@ -1,3 +1,5 @@
+![CI](https://github.com/HnimNart/deeplearning/workflows/CI/badge.svg)
+
 A small deep learning library written in [Futhark](https://futhark-lang.org)
 as part of my bachelor thesis.
 
