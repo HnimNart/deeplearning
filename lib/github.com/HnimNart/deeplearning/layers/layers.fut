@@ -23,19 +23,19 @@ module type layers = {
     flatten_layer [m][a][b] [n] t
 
   -- Simple wrappers for each layer type
-  val dense: (m: i32) -> (n: i32) -> activation_func ([n]t) ->  i32 -> dense_tp [m] [n]
-  val conv2d : (p: i32) -> (m: i32) -> (n: i32)
-            -> (filter_d: i32) -> (stride: i32) -> (filters: i32)
-            -> (out_m: i32) -> (out_n: i32)
-            -> ((d: i32) -> activation_func ([d]t))
+  val dense: (m: i64) -> (n: i64) -> activation_func ([n]t) ->  i32 -> dense_tp [m] [n]
+  val conv2d : (p: i64) -> (m: i64) -> (n: i64)
+            -> (filter_d: i64) -> (stride: i32) -> (filters: i64)
+            -> (out_m: i64) -> (out_n: i64)
+            -> ((d: i64) -> activation_func ([d]t))
             -> i32
             -> conv2d_layer [p][m][n] [filter_d] [filters] [out_m] [out_n] t
   val max_pooling2d :
-             (nlayer: i32)
-          -> (input_m: i32) -> (input_n: i32)
-          -> (output_m: i32) -> (output_n: i32)
+             (nlayer: i64)
+          -> (input_m: i64) -> (input_n: i64)
+          -> (output_m: i64) -> (output_n: i64)
           -> max_pooling_tp [nlayer] [input_m][input_n] [output_m][output_n]
-  val flatten : (m: i32) -> (a: i32) -> (b: i32) -> (n: i32)
+  val flatten : (m: i64) -> (a: i64) -> (b: i64) -> (n: i64)
           -> flatten_tp [m][a][b] [n]
 }
 

@@ -14,7 +14,7 @@ module type optimizer_type = {
     learning_rate ->
     (input: [K]i) ->
     (labels: [K]o) ->
-    (seed:i32) ->
+    (batch_size:i64) ->
     loss_func o t ->
     NN i w o g o e2 (apply_grad3 t)
 }

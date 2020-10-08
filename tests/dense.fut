@@ -57,9 +57,9 @@ entry dense_fwd [K] (input: [K][]f64) w b =
 --
 --         [1.0, 2.0, 3.0]}
 --
--- output {[[1.0, 2.0, 3.0, 4.0],
---          [2.0, 3.0, 4.0, 5.0],
---          [3.0, 4.0, 5.0, 6.0]]}
+-- output {[[31.0f64, 72.0f64, 113.0f64],
+--          [41.0f64, 98.0f64, 155.0f64],
+--          [51.0f64, 124.0f64, 197.0f64]]}
 
 entry dense_cache_1 [K] (input: [K][]f64) w b =
   let (cache, _) = dense.forward K true (w,b) input

@@ -25,7 +25,7 @@ let main [K] (batch_size: i32) (input:[K][784]dl.t) (labels: [K][10]dl.t) =
   let alpha = 0.1
   let nn' = dl.train.gradient_descent nn alpha
             input[:train] labels[:train]
-            batch_size (dl.loss.softmax_cross_entropy_with_logits 10)
+            (i64.i32 batch_size) (dl.loss.softmax_cross_entropy_with_logits 10)
   in dl.nn.accuracy
      nn'
      input[train:train+validation] labels[train:train+validation]

@@ -8,9 +8,9 @@ import "nn_types"
 module type loss = {
   type t
 
-  val cross_entropy : (n: i32) -> loss_func ([n]t) t
-  val softmax_cross_entropy_with_logits : (n: i32) -> loss_func ([n]t) t
-  val sum_of_squares_error : (n: i32) -> loss_func ([n]t) t
+  val cross_entropy : (n: i64) -> loss_func ([n]t) t
+  val softmax_cross_entropy_with_logits : (n: i64) -> loss_func ([n]t) t
+  val sum_of_squares_error : (n: i64) -> loss_func ([n]t) t
 }
 
 module loss_funcs (R:real) : loss with t = R.t = {

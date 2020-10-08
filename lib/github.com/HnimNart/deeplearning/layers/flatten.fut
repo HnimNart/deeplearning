@@ -8,16 +8,16 @@ type^ flatten_layer [m][a][b] [n] 't =
 
 module flatten (R:real) : {
   type t = R.t
-  val init : (m: i32) -> (a: i32) -> (b: i32) -> (n: i32)
+  val init : (m: i64) -> (a: i64) -> (b: i64) -> (n: i64)
           -> flatten_layer [m][a][b] [n] t
 } = {
   type t = R.t
 
   let forward [m][a][b] 't
-              (k: i32) (n: i32) (_training: bool) () (input: [k][m][a][b]t) : ([k](), [k][n]t) =
+              (k: i64) (n: i64) (_training: bool) () (input: [k][m][a][b]t) : ([k](), [k][n]t) =
     (replicate k (), map (\image -> flatten_3d image :> [n]t) input)
 
-  let backward (k: i32) (m: i32) (a: i32) (b: i32) (n: i32)
+  let backward (k: i64) (m: i64) (a: i64) (b: i64) (n: i64)
                (_first_layer:bool)
                (_: apply_grad3 t)
                ()

@@ -11,9 +11,9 @@ type^ max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] 't =
 -- | Max pooling 2d
 module max_pooling_2d (R:real) : {
   type t = R.t
-  val init : (nlayer: i32)
-          -> (input_m: i32) -> (input_n: i32)
-          -> (output_m: i32) -> (output_n: i32)
+  val init : (nlayer: i64)
+          -> (input_m: i64) -> (input_n: i64)
+          -> (output_m: i64) -> (output_n: i64)
           -> max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] t
 } = {
 
@@ -21,7 +21,7 @@ module max_pooling_2d (R:real) : {
 
   --- Finds the maximum value given an matrix
   --- and returns the indexs and the value
-  let max_val [m][n] (input:[m][n]t) : ((i32, i32), t) =
+  let max_val [m][n] (input:[m][n]t) : ((i64, i64), t) =
     let inp_flat = flatten input
     let argmax   =
       reduce (\n i ->
@@ -35,8 +35,8 @@ module max_pooling_2d (R:real) : {
 
   --- Forward propegate
   let forward [nlayer][input_m][input_n]
-              (k: i32)
-              (output_m: i32) (output_n: i32)
+              (k: i64)
+              (output_m: i64) (output_n: i64)
               (_training:bool)
               ()
               (input: [k][nlayer][input_m][input_n]t)
@@ -55,15 +55,15 @@ module max_pooling_2d (R:real) : {
                             let slice = layer[i:i+w_m, j:j+w_n]
                             let ((i',j'), res) = max_val slice
                             let offset = (input_m * (i'+i) + (j'+j))
-                            in (offset, res)) jxs)) ixs)) image)) input)
+                            in (i32.i64 offset, res)) jxs)) ixs)) image)) input)
 
     let cache = offsets
     in (cache, output)
 
   -- Back propegate by up-sample
   let backward [nlayer][output_m][output_n]
-               (k: i32)
-               (input_m: i32) (input_n: i32)
+               (k: i64)
+               (input_m: i64) (input_n: i64)
                (_first_layer:bool)
                _
                _
@@ -79,12 +79,12 @@ module max_pooling_2d (R:real) : {
     let error'       =
       map2 (\ix_img err_img ->
             map2 (\i e ->
-                  scatter (copy retval) i e) ix_img err_img) idx_flat error_flat
+                  scatter (copy retval) (map i64.i32 i) e) ix_img err_img) idx_flat error_flat
     in (map (\image -> map (unflatten input_m input_n) image) error', ())
 
-  let init (nlayer: i32)
-           (input_m: i32) (input_n: i32)
-           (output_m: i32) (output_n: i32)
+  let init (nlayer: i64)
+           (input_m: i64) (input_n: i64)
+           (output_m: i64) (output_n: i64)
          : max_pooling_2d_layer [nlayer] [input_m][input_n] [output_m][output_n] t =
     {forward  = \k -> forward k output_m output_n,
      backward = \k -> backward k input_m input_n,

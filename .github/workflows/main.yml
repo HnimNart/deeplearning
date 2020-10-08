@@ -28,8 +28,12 @@ jobs:
 
     - run: futhark test --pass-compiler-option=--Werror lib
 
+    - run: futhark test tests
+
     - run: futhark pkg upgrade
 
     - run: futhark pkg sync
 
     - run: futhark test --pass-compiler-option=--Werror lib
+
+    - run: futhark test tests

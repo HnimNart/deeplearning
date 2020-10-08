@@ -23,7 +23,7 @@ let apply_grad_gd (alpha:f64)
 let updater a b (x: ([a][b]f64, [a]f64)) (y: ([a][b]f64, [a]f64)) : ([a][b]f64, [a]f64) =
   apply_grad_gd 0.1 1 x y
 
-let act (d: i32) : activation_func ([d]f64) =
+let act (d: i64) : activation_func ([d]f64) =
   dl.nn.identity d
 
 let conv = dl.layers.conv2d 2 3 3
@@ -86,14 +86,8 @@ entry conv2d_cache_bias [K] (data: [K][][][]f64) w b  =
 --
 --         [1.0,2.0] }
 --
--- output {[[[[[[1.0,   2.0], [4.0,  5.0]],
---             [[2.0,   3.0], [5.0,  6.0]]],
---            [[[4.0,   5.0], [7.0,  8.0]],
---             [[5.0,   6.0], [8.0,  9.0]]]],
---           [[[[10.0, 11.0], [13.0, 14.0]],
---             [[11.0, 12.0], [14.0, 15.0]]],
---            [[[13.0, 14.0], [16.0, 17.0]],
---             [[14.0, 15.0], [17.0, 18.0]]]]]]
+-- output {[[[[357.0f64, 393.0f64], [465.0f64, 501.0f64]],
+--         [[186.0f64, 222.0f64], [294.0f64, 330.0f64]]]]
 --        }
 
 entry conv2d_cache_matrix [K] (data: [K][][][]f64) w b  =

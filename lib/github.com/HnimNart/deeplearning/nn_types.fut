@@ -3,8 +3,8 @@ type^ forwards   'input 'w 'output 'cache = bool -> w -> input -> (cache, output
 type^ backwards  'c 'w  'err_in  'err_out '^u = bool -> u -> w -> c -> err_in  -> (err_out, w)
 
 type^ NN 'input 'w 'output 'c 'e_in 'e_out '^u =
-               { forward : (k: i32) -> forwards ([k]input) w ([k]output) ([k]c),
-                 backward: (k: i32) -> backwards ([k]c) w ([k]e_in) ([k]e_out) u,
+               { forward : (k: i64) -> forwards ([k]input) w ([k]output) ([k]c),
+                 backward: (k: i64) -> backwards ([k]c) w ([k]e_in) ([k]e_out) u,
                  weights : w}
 
 --- Commonly used types
@@ -20,7 +20,7 @@ type dims3d  = (i32, i32, i32)
 --- used by optimizers
 type std_weights [a][b][c] 't = ([a][b]t, [c]t)
 type^ apply_grad2 'x 'y = (x, y) -> (x, y) -> (x, y)
-type^ apply_grad3 't = (a: i32) -> (b: i32) -> apply_grad2 ([a][b]t) ([a]t)
+type^ apply_grad3 't = (a: i64) -> (b: i64) -> apply_grad2 ([a][b]t) ([a]t)
 
 
 --- Function pairs

@@ -40,11 +40,11 @@ module type network = {
     t
 
   --- activation function wrappers
-  val identity : (n: i32) -> activation_func ([n]t)
-  val sigmoid  : (n: i32) -> activation_func ([n]t)
-  val relu     : (n: i32) -> activation_func ([n]t)
-  val tanh     : (n: i32) -> activation_func ([n]t)
-  val softmax  : (n: i32) -> activation_func ([n]t)
+  val identity : (n: i64) -> activation_func ([n]t)
+  val sigmoid  : (n: i64) -> activation_func ([n]t)
+  val relu     : (n: i64) -> activation_func ([n]t)
+  val tanh     : (n: i64) -> activation_func ([n]t)
+  val softmax  : (n: i64) -> activation_func ([n]t)
 
   --- helper functions for calculating accuracy
   val argmax [n] : [n]t -> i32
@@ -98,7 +98,7 @@ module neural_network (R:real): network with t = R.t = {
     let argmaxs      = map2 (\x y -> (f x,f y)) labels predictions
     let total        = reduce (+) 0 (map (\(x,y) -> i32.bool (x == y))
                                              argmaxs)
-    in R.(i32 total / i32 K)
+    in R.(i32 total / i64 K)
 
 
   let loss [K] 'w 'g 'e1 'e2 'u 'i 'o (nn:NN i w o g e1 e2 u)
@@ -114,10 +114,10 @@ module neural_network (R:real): network with t = R.t = {
   --- Breaks if two or more values have max values?
   --- Question is which index should be chosen then?
   let argmax [n] (X:[n]t) : i32 =
-    reduce (\n i -> if R.(X[n] > X[i]) then n else i) 0 (iota n)
+    reduce (\n i -> if R.(X[n] > X[i]) then n else i) 0 (map i32.i64 (iota n))
 
   let argmin [n] (X:[n]t) : i32 =
-    reduce (\n i -> if R.(X[n] < X[i]) then n else i) 0 (iota n)
+    reduce (\n i -> if R.(X[n] < X[i]) then n else i) 0 (map i32.i64 (iota n))
 
   --- activation function wrappers
   let identity = act_funcs.Identity_1d

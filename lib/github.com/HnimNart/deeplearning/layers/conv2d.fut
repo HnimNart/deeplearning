@@ -16,10 +16,10 @@ type^ conv2d_layer [p][m][n] [filter_d] [filters] [out_m] [out_n] 't =
 module conv2d (R:real) : {
   type t = R.t
   val init :
-       (p: i32) -> (m: i32) -> (n: i32) ->
-       (filter_d: i32) -> (stride: i32) -> (filters: i32) ->
-       (out_m: i32) -> (out_n: i32)
-    -> ((d: i32) -> activation_func ([d]t))
+       (p: i64) -> (m: i64) -> (n: i64) ->
+       (filter_d: i64) -> (stride: i32) -> (filters: i64) ->
+       (out_m: i64) -> (out_n: i64)
+    -> ((d: i64) -> activation_func ([d]t))
     -> i32
     -> conv2d_layer [p][m][n] [filter_d] [filters] [out_m] [out_n] t
   } = {
@@ -31,13 +31,13 @@ module conv2d (R:real) : {
   module w_init = weight_initializer R
 
   -- Calculate offsets in img, given window size and stride
-  let calc_img_offsets (mn: i32) (stride:i32) ((m,n):(i32, i32)): [mn](i32, i32) =
-    let row_offsets = map (\i -> i * stride) (0..<m)
-    let col_offsets = map (\i -> i * stride) (0..<n)
+  let calc_img_offsets (mn: i64) (stride:i32) ((m,n):(i64, i64)): [mn](i64, i64) =
+    let row_offsets = map (\i -> i * i64.i32 stride) (0..<m)
+    let col_offsets = map (\i -> i * i64.i32 stride) (0..<n)
     in flatten_to mn (map (\i -> map (\j -> (i,j) ) row_offsets) col_offsets)
 
   --- Add zero padding around a 2D img
-  let add_padding [m][n] (padding:i32) (output_m: i32) (output_n: i32) (X:[m][n]t)
+  let add_padding [m][n] (padding:i64) (output_m: i64) (output_n: i64) (X:[m][n]t)
                        : [output_m][output_n]t =
     let tot_elem = output_m * output_n
     let mn = m * n
@@ -53,9 +53,9 @@ module conv2d (R:real) : {
   -- for convolutional op
   let im2col [p][m][n] [mn]
              (x: [p][m][n]t)
-             ((w_m, w_n):(i32, i32))
-             (pwtotal: i32)
-             (idx: [mn](i32, i32)) : [pwtotal][mn]t =
+             ((w_m, w_n):(i64, i64))
+             (pwtotal: i64)
+             (idx: [mn](i64, i64)) : [pwtotal][mn]t =
     let wtotal = w_m * w_n
     in transpose (map (\(i,j) ->
                          flatten_to pwtotal
@@ -65,11 +65,11 @@ module conv2d (R:real) : {
                       idx)
 
   let forward [filter_d][filters]
-              (k: i32) (p: i32) (m: i32) (n: i32)
-              (out_m: i32) (out_n: i32)
-              (out_mn: i32)
+              (k: i64) (p: i64) (m: i64) (n: i64)
+              (out_m: i64) (out_n: i64)
+              (out_mn: i64)
               (act: [out_mn]t -> [out_mn]t)
-              ((w_m, w_n): (i32, i32))
+              ((w_m, w_n): (i64, i64))
               (stride:i32)
               (_training:bool)
               ((w,b): ([filters][p][filter_d][filter_d]t, [filters]t))
@@ -98,9 +98,9 @@ module conv2d (R:real) : {
 
 
   let backward [filter_d][filters]
-               (k: i32) (p: i32) (m: i32) (n: i32)
-               (out_m: i32) (out_n: i32)
-               (out_mn: i32)
+               (k: i64) (p: i64) (m: i64) (n: i64)
+               (out_m: i64) (out_n: i64)
+               (out_mn: i64)
                (act: [out_n]t -> [out_n]t)
                (stride:i32)
                (_first_layer:bool)
@@ -161,10 +161,10 @@ module conv2d (R:real) : {
          b'))
 
 
-  let init (p: i32) (m: i32) (n: i32)
-           (filter_d: i32) (stride: i32)
-           (filters: i32) (out_m: i32) (out_n: i32)
-           (act: (d: i32) -> activation_func ([d]t))
+  let init (p: i64) (m: i64) (n: i64)
+           (filter_d: i64) (stride: i32)
+           (filters: i64) (out_m: i64) (out_n: i64)
+           (act: (d: i64) -> activation_func ([d]t))
            (seed: i32) : conv2d_layer [p][m][n] [filter_d] [filters] [out_m] [out_n] t =
     let pwtotal = p * filter_d * filter_d
     let out_mn = out_m * out_n

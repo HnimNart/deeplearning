@@ -14,13 +14,13 @@ module gradient_descent (R:real) : optimizer_type
   module util = utility R
 
   let apply_grad_gd (alpha:learning_rate)
-                    (batch_size:i32)
-                    (m: i32) (n: i32)
+                    (batch_size:i64)
+                    (m: i64) (n: i64)
                     ((w,b): (std_weights [m][n] [m] t))
                     ((wg,bg): (std_weights [m][n] [m] t)) =
 
-    let wg_mean   = map (map R.((/i32 batch_size))) wg
-    let bg_mean   = map (R.((/i32 batch_size))) bg
+    let wg_mean   = map (map R.((/i64 batch_size))) wg
+    let bg_mean   = map (R.((/i64 batch_size))) bg
 
     let wg_scaled = util.scale_matrix wg_mean alpha
     let bg_scaled = util.scale_v bg_mean alpha
@@ -37,7 +37,7 @@ module gradient_descent (R:real) : optimizer_type
             (alpha:learning_rate)
             (input:[K]i)
             (labels:[K]o)
-            (batch_sz: i32)
+            (batch_sz: i64)
             ({f=_, fd=loss'}:loss_func o t) =
 
     let i = 0

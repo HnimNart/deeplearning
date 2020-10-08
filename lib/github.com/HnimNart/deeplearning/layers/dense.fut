@@ -11,7 +11,7 @@ type^ dense_layer [m] [n] 't =
 
 -- | Fully connected layer
 module dense (R:real) : { type t = R.t
-                          val init : (m: i32) -> (n: i32)
+                          val init : (m: i64) -> (n: i64)
                                   -> activation_func ([n]t)
                                   -> i32
                                   -> dense_layer [m] [n] t
@@ -24,8 +24,8 @@ module dense (R:real) : { type t = R.t
   module w_init = weight_initializer R
 
   -- Forward propagation
-  let forward (k: i32)
-              (n: i32) (m: i32)
+  let forward (k: i64)
+              (n: i64) (m: i64)
               (act: [n]t -> [n]t)
               (_training:bool)
               ((w,b): std_weights [n][m] [n] t)
@@ -38,8 +38,8 @@ module dense (R:real) : { type t = R.t
     in (cache, res_act)
 
   -- Backward propagation
-  let backward (k: i32)
-               (n: i32) (m: i32)
+  let backward (k: i64)
+               (n: i64) (m: i64)
                (act: [n]t -> [n]t)
                (_first_layer:bool)
                (apply_grads: apply_grad3 t)
