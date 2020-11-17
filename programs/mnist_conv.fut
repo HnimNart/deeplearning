@@ -12,10 +12,10 @@ module dl = deep_learning f32
 
 let seed = 1
 
-let identity (d: i32) : activation_func ([d]dl.t) =
+let identity (d: i64) : activation_func ([d]dl.t) =
   dl.nn.identity d
 
-let relu (d: i32) : activation_func ([d]dl.t) =
+let relu (d: i64) : activation_func ([d]dl.t) =
   dl.nn.relu d
 
 let (>>) = dl.nn.connect_layers
@@ -35,7 +35,7 @@ let main [m] (batch_size: i32) (input: [m][]dl.t) (labels: [m][]dl.t) =
   let alpha = 0.1
   let nn' = dl.train.gradient_descent nn alpha
             input'[:train] labels[:train]
-            batch_size (dl.loss.softmax_cross_entropy_with_logits 10)
+            (i64.i32 batch_size) (dl.loss.softmax_cross_entropy_with_logits 10)
   in dl.nn.accuracy
      nn'
      input'[train:train+validation] labels[train:train+validation]
