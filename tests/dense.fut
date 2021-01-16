@@ -65,7 +65,8 @@ entry dense_cache_1 [K] (input: [K][]f64) w b =
   let (cache, _) = dense.forward K true (w,b) input
   in map (.1) cache
 
--- == -- entry: dense_cache_2
+-- ==
+-- entry: dense_cache_2
 -- input {[[1.0, 2.0, 3.0, 4.0],
 --         [2.0, 3.0, 4.0, 5.0],
 --         [3.0, 4.0, 5.0, 6.0]]
