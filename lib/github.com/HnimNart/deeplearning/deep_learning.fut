@@ -1,8 +1,8 @@
-import "nn_types"
-import "neural_network"
-import "optimizers/optimizers"
-import "layers/layers"
-import "loss_funcs"
+open import "nn_types"
+open import "neural_network"
+open import "optimizers/optimizers"
+open import "layers/layers"
+open import "loss_funcs"
 
 -- | Aggregation module for deep learning
 module deep_learning (R:real) : {
