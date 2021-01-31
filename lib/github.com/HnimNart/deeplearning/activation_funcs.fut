@@ -30,7 +30,7 @@ module activation_funcs (R:real) : activations with t = R.t = {
     map (\_ -> R.(i32 1)) (0..<m)
 
   let sigmoid_1d (X:[]t) : []t =
-    map (\x -> R.(i32 1/(i32 1 + exp (negate x)))) X
+    map (\x -> R.(i32 1/(i32 1 + exp (neg x)))) X
 
   let sigmoid_1d' (X:[]t) : []t =
     map (\x -> R.(x * ((i32 1) - x))) (sigmoid_1d X)
@@ -43,7 +43,7 @@ module activation_funcs (R:real) : activations with t = R.t = {
 
   let tanh_1d (X:[]t) : []t =
     map (\x ->
-         R.((exp x - exp(negate x)) / ((exp x) + exp (negate x)))) X
+         R.((exp x - exp(neg x)) / ((exp x) + exp (neg x)))) X
 
   let tanh_1d' (X:[]t) : []t =
     map (\x -> R.(i32 1 - x**(i32 2))) (tanh_1d X)

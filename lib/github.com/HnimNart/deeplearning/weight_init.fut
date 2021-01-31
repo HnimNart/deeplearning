@@ -29,7 +29,7 @@ module weight_initializer (R:real) : {
 
   let gen_random_array_2d_xavier_uni (m: i64) (n: i64) (seed:i32) : [n][m]t =
     let d = R.(((sqrt((i32 6)) / sqrt(i64 n + i64 m))) )
-    let arr = gen_random_array_uni (m*n) (R.(negate d),d) seed
+    let arr = gen_random_array_uni (m*n) (R.(neg d),d) seed
     in unflatten n m arr
 
   let gen_rand_norm (i: i32) (dist) : t =
